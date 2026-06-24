@@ -1,12 +1,12 @@
 import { Config } from '../config/index.js';
-import { OpenRouterClient } from '../utils/openrouter-client.js';
 import { ImageProcessor } from '../utils/image-processor.js';
 import { Logger } from '../utils/logger.js';
+import { VisionProvider } from '../types/index.js';
 
 export async function handleAnalyzeWebpage(
   args: any,
   config: Config,
-  openRouterClient: OpenRouterClient,
+  provider: VisionProvider,
   logger: Logger
 ) {
   const imageProcessor = ImageProcessor.getInstance();
@@ -79,7 +79,7 @@ export async function handleAnalyzeWebpage(
     }
 
     // Analyze the webpage screenshot
-    const result = await openRouterClient.analyzeImage(
+    const result = await provider.analyzeImage(
       processedImage.data,
       processedImage.mimeType,
       prompt,

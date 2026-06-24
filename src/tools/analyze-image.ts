@@ -1,13 +1,12 @@
 import { Config } from '../config/index.js';
-import { OpenRouterClient } from '../utils/openrouter-client.js';
 import { ImageProcessor } from '../utils/image-processor.js';
 import { Logger } from '../utils/logger.js';
-import { ImageAnalysisOptions, ImageInput } from '../types/index.js';
+import { ImageAnalysisOptions, ImageInput, VisionProvider } from '../types/index.js';
 
 export async function handleAnalyzeImage(
   args: any,
   config: Config,
-  openRouterClient: OpenRouterClient,
+  provider: VisionProvider,
   logger: Logger
 ) {
   const imageProcessor = ImageProcessor.getInstance();
@@ -57,7 +56,7 @@ export async function handleAnalyzeImage(
     });
 
     // Analyze the image with timeout
-    const analysisPromise = openRouterClient.analyzeImage(
+    const analysisPromise = provider.analyzeImage(
       processedImage.data,
       processedImage.mimeType,
       options.prompt || 'Analyze this image in detail. Describe what you see, including objects, people, text, and any notable features.',
