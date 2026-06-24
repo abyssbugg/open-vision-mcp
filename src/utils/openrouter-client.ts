@@ -1,12 +1,18 @@
 import axios, { AxiosInstance } from 'axios';
-import { ImageAnalysisResult, OpenRouterConfig } from '../types/index.js';
+import { ImageAnalysisResult, OpenRouterConfig, ProviderCapabilities, VisionProvider } from '../types/index.js';
 import { Logger } from './logger.js';
 
-export class OpenRouterClient {
+export class OpenRouterClient implements VisionProvider {
   private static instance: OpenRouterClient;
   private client: AxiosInstance;
   private config: OpenRouterConfig;
   private logger: Logger;
+
+  public readonly capabilities: ProviderCapabilities = {
+    jsonMode: true,
+    modelsEndpoint: true,
+    maxTokensField: 'max_tokens',
+  };
 
   private constructor(config: OpenRouterConfig) {
     this.config = config;
