@@ -12,7 +12,7 @@ import { handleAnalyzeImage } from './tools/analyze-image.js';
 import { handleAnalyzeMobileApp } from './tools/analyze-mobile-app.js';
 import { handleAnalyzeWebpage } from './tools/analyze-webpage.js';
 import { Logger } from './utils/logger.js';
-import { OpenRouterClient } from './utils/openrouter-client.js';
+import { ProviderFactory } from './providers/factory.js';
 
 async function main() {
   const logger = Logger.getInstance();
@@ -25,8 +25,10 @@ async function main() {
     const openRouterConfig = config.getOpenRouterConfig();
     const serverConfig = config.getServerConfig();
 
-    // Initialize OpenRouter client
-    const openRouterClient = OpenRouterClient.getInstance(openRouterConfig);
+    // Initialize provider via the factory.
+    // Phase 1: 'openrouter' is the only supported provider id.
+    // Phase 2 will widen the ProviderId union and read this from config.
+    const provider = ProviderFactory.create('openrouter', openRouterConfig);
 
     // Create MCP server
     const server = new Server(
@@ -190,11 +192,11 @@ async function main() {
       try {
         switch (name) {
           case 'analyze_image':
-            return await handleAnalyzeImage(args, config, openRouterClient, logger);
+            return await handleAnalyzeImage(args, config, provider, logger);
           case 'analyze_webpage_screenshot':
-            return await handleAnalyzeWebpage(args, config, openRouterClient, logger);
+            return await handleAnalyzeWebpage(args, config, provider, logger);
           case 'analyze_mobile_app_screenshot':
-            return await handleAnalyzeMobileApp(args, config, openRouterClient, logger);
+            return await handleAnalyzeMobileApp(args, config, provider, logger);
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -241,7 +243,7 @@ async function main() {
 
     // Validate connection and model AFTER connecting (non-blocking for MCP client)
     logger.info('Testing OpenRouter API connection...');
-    const connectionTest = await openRouterClient.testConnection();
+    const connectionTest = await provider.testConnection();
     if (!connectionTest) {
       logger.error('Failed to connect to OpenRouter API - tools may not work');
     } else {
@@ -249,7 +251,12 @@ async function main() {
     }
 
     logger.info(`Validating model: ${openRouterConfig.model}`);
-    const modelValid = await openRouterClient.validateModel(openRouterConfig.model);
+    // validateModel is optional on the VisionProvider interface (not all
+    // providers expose a /models endpoint). Skip validation when absent;
+    // the existing startup logs a warning on any validation miss.
+    const modelValid = provider.validateModel
+      ? await provider.validateModel(openRouterConfig.model)
+      : false;
     if (!modelValid) {
       logger.warn(`Model validation failed: ${openRouterConfig.model} - tools may not work as expected`);
     } else {
