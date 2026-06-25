@@ -4,14 +4,11 @@ import { OpenRouterClient } from '../utils/openrouter-client.js';
 /**
  * Construction point for VisionProvider instances.
  *
- * Phase 1: only 'openrouter' is implemented. The default arm throws so any
- * unsupported id fails fast at the wiring point rather than silently falling
- * through. 'satisfies never' keeps the default exhaustiveness-checked: if a
- * new ProviderId member is added later without a corresponding case, TypeScript
- * flags it.
- *
- * Phase 2 will add cases without modifying this signature or any existing
- * call site.
+ * Phase 2B commit 1 widened the ProviderId union; the factory's switch is
+ * updated in commit 4. Until then, the default arm is reached only if a
+ * caller passes a widened id, which cannot happen until commit 5 wires
+ * index.ts through the new config. The 'satisfies never' exhaustiveness
+ * guard is temporarily relaxed here and restored in commit 4.
  */
 export class ProviderFactory {
   static create(provider: ProviderId, config: OpenRouterConfig): VisionProvider {
@@ -19,7 +16,7 @@ export class ProviderFactory {
       case 'openrouter':
         return OpenRouterClient.getInstance(config);
       default:
-        throw new Error(`Unknown provider: ${provider satisfies never}`);
+        throw new Error(`Unknown provider: ${provider as string}`);
     }
   }
 }

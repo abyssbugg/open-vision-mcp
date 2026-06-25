@@ -30,6 +30,22 @@ export interface OpenRouterConfig {
   baseUrl?: string;
 }
 
+/**
+ * Phase 2B unified provider configuration. Carries the provider discriminator
+ * alongside the credentials and per-provider settings.
+ *
+ * `OpenRouterConfig` is preserved above as a structural supertype so that
+ * existing references (tests, the legacy Config.getOpenRouterConfig accessor)
+ * continue to type-check during the migration. Phase 3 will retire it.
+ */
+export interface ProviderConfig {
+  provider: ProviderId;
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+  extraHeaders?: Record<string, string>;
+}
+
 export interface ServerConfig {
   port?: number;
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
@@ -38,10 +54,17 @@ export interface ServerConfig {
 }
 
 /**
- * Identifier of an inference provider. Phase 1 ships only 'openrouter'.
- * Phase 2 will widen this union without changing the factory signature.
+ * Identifier of an inference provider. Phase 2B widens this to the six
+ * fully-compatible OpenAI-compatible providers. Phase 2C will add 'chutes',
+ * 'cerebras', and 'azure' without changing the factory signature.
  */
-export type ProviderId = 'openrouter';
+export type ProviderId =
+  | 'openrouter'
+  | 'openai'
+  | 'together'
+  | 'deepinfra'
+  | 'fireworks'
+  | 'groq';
 
 /**
  * Static capability descriptor for a VisionProvider. Enables synchronous,
@@ -59,9 +82,8 @@ export interface ProviderCapabilities {
 /**
  * Behavioral contract for a vision-capable inference provider.
  *
- * Phase 1: implemented solely by OpenRouterClient. Tool handlers depend on
- * this interface rather than the concrete class so that Phase 2 may add
- * alternative providers without touching tool code.
+ * Tool handlers depend on this interface rather than any concrete class so
+ * that alternative providers can be added without touching tool code.
  */
 export interface VisionProvider {
   /** Static capability descriptor for this provider. */
