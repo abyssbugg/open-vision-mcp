@@ -1,436 +1,149 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { registerAnalyzeWebpageTool } from '../../src/tools/analyze-webpage.js';
-import { Config } from '../../src/config/index.js';
-import { OpenRouterClient } from '../../src/utils/openrouter-client.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { handleAnalyzeWebpage } from '../../src/tools/analyze-webpage.js';
 import { ImageProcessor } from '../../src/utils/image-processor.js';
 import { Logger } from '../../src/utils/logger.js';
+import type { Config } from '../../src/config/index.js';
+import type { VisionProvider } from '../../src/types/index.js';
 
-// Mock dependencies
-vi.mock('../../src/config/index.js');
-vi.mock('../../src/utils/openrouter-client.js');
 vi.mock('../../src/utils/image-processor.js');
 vi.mock('../../src/utils/logger.js');
 
-const MockedConfig = vi.mocked(Config);
-const MockedOpenRouterClient = vi.mocked(OpenRouterClient);
 const MockedImageProcessor = vi.mocked(ImageProcessor);
-const MockedLogger = vi.mocked(Logger);
 
-describe('registerAnalyzeWebpageTool', () => {
-  let mockServer: any;
-  let mockConfig: any;
-  let mockOpenRouterClient: any;
+describe('handleAnalyzeWebpage', () => {
+  let mockConfig: Config;
+  let mockProvider: VisionProvider;
+  let mockLogger: Logger;
   let mockImageProcessor: any;
-  let mockLogger: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Create mocks
-    mockServer = {
-      setRequestHandler: vi.fn(),
-    };
-
     mockConfig = {
-      getOpenRouterConfig: vi.fn(() => ({
-        apiKey: 'test-api-key',
-        model: 'test-model',
-      })),
-      getServerConfig: vi.fn(() => ({
-        maxImageSize: 10485760,
-      })),
-    };
-
-    mockOpenRouterClient = {
+      getServerConfig: vi.fn(() => ({ maxImageSize: 10485760 })),
+    } as any;
+    mockProvider = {
       analyzeImage: vi.fn(),
-    };
-
-    mockImageProcessor = {
-      processImage: vi.fn(),
-      isValidImageType: vi.fn(() => true),
-    };
-
-    mockLogger = {
-      getInstance: vi.fn(() => ({
-        info: vi.fn(),
-        debug: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-      })),
-    };
-
-    // Setup mock returns
-    MockedConfig.getInstance = vi.fn(() => mockConfig);
-    MockedOpenRouterClient.getInstance = vi.fn(() => mockOpenRouterClient);
+      capabilities: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+    } as any;
+    mockLogger = { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() } as any;
+    mockImageProcessor = { processImage: vi.fn(), isValidImageType: vi.fn(() => true) };
     MockedImageProcessor.getInstance = vi.fn(() => mockImageProcessor);
-    MockedLogger.getInstance = mockLogger.getInstance;
-
-    // Register the tool
-    registerAnalyzeWebpageTool(mockServer);
   });
 
-  afterEach(() => {
-    vi.resetAllMocks();
+  it('should successfully analyze webpage screenshot with default settings', async () => {
+    mockImageProcessor.processImage.mockResolvedValue({ data: 'base64data', mimeType: 'image/png', size: 1000 });
+    (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'Webpage analysis', model: 'test' });
+
+    const result = await handleAnalyzeWebpage(
+      { type: 'base64', data: 'base64data', mimeType: 'image/png' },
+      mockConfig, mockProvider, mockLogger
+    );
+
+    expect(result).toEqual({ content: [{ type: 'text', text: 'Webpage analysis' }] });
+    // Default format is 'json' for webpage
+    expect(mockProvider.analyzeImage).toHaveBeenCalledWith(
+      'base64data', 'image/png', expect.stringContaining('Analyze this webpage screenshot'),
+      expect.objectContaining({ format: 'json', maxTokens: 4000 })
+    );
   });
 
-  describe('tool registration', () => {
-    it('should register the tool handler', () => {
-      expect(mockServer.setRequestHandler).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.any(Function)
-      );
-    });
+  it('should analyze webpage with specific focus area', async () => {
+    mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+    (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'Layout analysis', model: 'test' });
+
+    await handleAnalyzeWebpage(
+      { type: 'base64', data: 'd', focusArea: 'layout' },
+      mockConfig, mockProvider, mockLogger
+    );
+
+    expect(mockProvider.analyzeImage).toHaveBeenCalledWith(
+      'd', 'image/png', expect.stringContaining('Focus specifically on the layout structure'),
+      expect.any(Object)
+    );
   });
 
-  describe('tool handler', () => {
-    let toolHandler: any;
+  it('should analyze webpage with accessibility analysis enabled', async () => {
+    mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+    (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'A11y analysis', model: 'test' });
 
-    beforeEach(() => {
-      // Get the registered handler
-      const handlerCall = mockServer.setRequestHandler.mock.calls[0];
-      toolHandler = handlerCall[1];
-    });
+    await handleAnalyzeWebpage(
+      { type: 'base64', data: 'd', includeAccessibility: true, focusArea: 'accessibility' },
+      mockConfig, mockProvider, mockLogger
+    );
 
-    it('should successfully analyze webpage screenshot with default settings', async () => {
-      const mockProcessedImage = {
-        data: 'base64screenshot',
-        mimeType: 'image/png',
-        size: 5000,
-      };
+    expect(mockProvider.analyzeImage).toHaveBeenCalledWith(
+      'd', 'image/png', expect.stringContaining('accessibility'),
+      expect.any(Object)
+    );
+  });
 
-      const mockAnalysisResult = {
-        success: true,
-        analysis: '{"layout": "responsive", "interactive_elements": ["button", "form"]}',
-        model: 'test-model',
-      };
+  it('should analyze webpage with different focus areas', async () => {
+    const focusAssertions: Record<string, string> = {
+      content: 'Focus specifically on the content',
+      navigation: 'Focus specifically on navigation elements',
+      forms: 'Focus specifically on form elements',
+      interactive: 'Focus specifically on interactive elements',
+    };
 
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue(mockAnalysisResult);
+    for (const focus of Object.keys(focusAssertions)) {
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'x', model: 'test' });
 
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-          arguments: {
-            type: 'file',
-            data: '/path/to/screenshot.png',
-          },
-        },
-      };
-
-      const result = await toolHandler(request);
-
-      expect(mockOpenRouterClient.analyzeImage).toHaveBeenCalledWith(
-        'base64screenshot',
-        'image/png',
-        expect.stringContaining('Analyze this webpage screenshot and provide detailed information about its structure, content, and design'),
-        {
-          format: 'json',
-          maxTokens: 4000,
-        }
+      await handleAnalyzeWebpage(
+        { type: 'base64', data: 'd', focusArea: focus },
+        mockConfig, mockProvider, mockLogger
       );
 
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: '{"layout": "responsive", "interactive_elements": ["button", "form"]}',
-          },
-        ],
-      });
+      const call = (mockProvider.analyzeImage as any).mock.calls[(mockProvider.analyzeImage as any).mock.calls.length - 1];
+      expect(call[2]).toContain(focusAssertions[focus]);
+
+      vi.clearAllMocks();
+      MockedImageProcessor.getInstance = vi.fn(() => mockImageProcessor);
+    }
+  });
+
+  it('should handle text format output', async () => {
+    mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+    (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'Text output', model: 'test' });
+
+    await handleAnalyzeWebpage(
+      { type: 'base64', data: 'd', format: 'text' },
+      mockConfig, mockProvider, mockLogger
+    );
+
+    expect(mockProvider.analyzeImage).toHaveBeenCalledWith(
+      'd', 'image/png', expect.any(String),
+      expect.objectContaining({ format: 'text' })
+    );
+  });
+
+  it('should handle URL input for webpage screenshots', async () => {
+    mockImageProcessor.processImage.mockResolvedValue({ data: 'urlb64', mimeType: 'image/png', size: 500 });
+    (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'URL webpage', model: 'test' });
+
+    const result = await handleAnalyzeWebpage(
+      { type: 'url', data: 'https://example.com/page.png' },
+      mockConfig, mockProvider, mockLogger
+    );
+
+    expect(mockImageProcessor.processImage).toHaveBeenCalledWith({
+      type: 'url', data: 'https://example.com/page.png', mimeType: undefined,
     });
+    expect(result).toEqual({ content: [{ type: 'text', text: 'URL webpage' }] });
+  });
 
-    it('should analyze webpage with specific focus area', async () => {
-      const mockProcessedImage = {
-        data: 'base64screenshot',
-        mimeType: 'image/jpeg',
-        size: 4000,
-      };
+  it('should handle analysis errors gracefully', async () => {
+    mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+    (mockProvider.analyzeImage as any).mockResolvedValue({ success: false, error: 'Provider error' });
 
-      const mockAnalysisResult = {
-        success: true,
-        analysis: '{"navigation_elements": ["menu", "breadcrumbs"], "structure": "hierarchical"}',
-        model: 'test-model',
-      };
+    const result = await handleAnalyzeWebpage(
+      { type: 'base64', data: 'd' },
+      mockConfig, mockProvider, mockLogger
+    );
 
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue(mockAnalysisResult);
-
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-          arguments: {
-            type: 'file',
-            data: '/path/to/screenshot.jpg',
-            focusArea: 'navigation',
-            includeAccessibility: false,
-            format: 'json',
-            maxTokens: 3000,
-          },
-        },
-      };
-
-      const result = await toolHandler(request);
-
-      expect(mockOpenRouterClient.analyzeImage).toHaveBeenCalledWith(
-        'base64screenshot',
-        'image/jpeg',
-        expect.stringContaining('Focus specifically on navigation elements, menus, breadcrumbs, and user pathways'),
-        {
-          format: 'json',
-          maxTokens: 3000,
-        }
-      );
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: '{"navigation_elements": ["menu", "breadcrumbs"], "structure": "hierarchical"}',
-          },
-        ],
-      });
-    });
-
-    it('should analyze webpage with accessibility analysis enabled', async () => {
-      const mockProcessedImage = {
-        data: 'base64screenshot',
-        mimeType: 'image/png',
-        size: 6000,
-      };
-
-      const mockAnalysisResult = {
-        success: true,
-        analysis: '{"accessibility_issues": ["missing_alt_text", "poor_color_contrast"], "score": 0.7}',
-        model: 'test-model',
-      };
-
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue(mockAnalysisResult);
-
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-          arguments: {
-            type: 'base64',
-            data: 'base64data',
-            mimeType: 'image/png',
-            focusArea: 'accessibility',
-            includeAccessibility: true,
-            format: 'json',
-          },
-        },
-      };
-
-      const result = await toolHandler(request);
-
-      expect(mockOpenRouterClient.analyzeImage).toHaveBeenCalledWith(
-        'base64screenshot',
-        'image/png',
-        expect.stringContaining('accessibility'),
-        {
-          format: 'json',
-          maxTokens: 4000,
-        }
-      );
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: '{"accessibility_issues": ["missing_alt_text", "poor_color_contrast"], "score": 0.7}',
-          },
-        ],
-      });
-    });
-
-    it('should analyze webpage with different focus areas', async () => {
-      const focusAreas = ['layout', 'content', 'forms', 'interactive'];
-      const mockProcessedImage = {
-        data: 'base64screenshot',
-        mimeType: 'image/png',
-        size: 5000,
-      };
-
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue({
-        success: true,
-        analysis: 'Analysis complete',
-        model: 'test-model',
-      });
-
-      for (const focusArea of focusAreas) {
-        const request = {
-          params: {
-            name: 'analyze_webpage_screenshot',
-            arguments: {
-              type: 'file',
-              data: '/path/to/screenshot.png',
-              focusArea,
-            },
-          },
-        };
-
-        await toolHandler(request);
-
-        expect(mockOpenRouterClient.analyzeImage).toHaveBeenCalledWith(
-          'base64screenshot',
-          'image/png',
-          expect.stringContaining(focusArea),
-          { format: 'json', maxTokens: 4000 }
-        );
-      }
-    });
-
-    it('should handle text format output', async () => {
-      const mockProcessedImage = {
-        data: 'base64screenshot',
-        mimeType: 'image/png',
-        size: 5000,
-      };
-
-      const mockAnalysisResult = {
-        success: true,
-        analysis: 'The webpage has a clean layout with clear navigation hierarchy.',
-        model: 'test-model',
-      };
-
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue(mockAnalysisResult);
-
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-          arguments: {
-            type: 'file',
-            data: '/path/to/screenshot.png',
-            format: 'text',
-          },
-        },
-      };
-
-      const result = await toolHandler(request);
-
-      expect(mockOpenRouterClient.analyzeImage).toHaveBeenCalledWith(
-        'base64screenshot',
-        'image/png',
-        expect.stringContaining('Analyze this webpage screenshot and provide detailed information about its structure, content, and design'),
-        {
-          format: 'text',
-          maxTokens: 4000,
-        }
-      );
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: 'The webpage has a clean layout with clear navigation hierarchy.',
-          },
-        ],
-      });
-    });
-
-    it('should handle URL input for webpage screenshots', async () => {
-      const mockProcessedImage = {
-        data: 'base64fromurl',
-        mimeType: 'image/webp',
-        size: 7000,
-      };
-
-      const mockAnalysisResult = {
-        success: true,
-        analysis: '{"webpage_type": "e-commerce", "conversion_elements": ["add_to_cart", "checkout"]}',
-        model: 'test-model',
-      };
-
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue(mockAnalysisResult);
-
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-          arguments: {
-            type: 'url',
-            data: 'https://example.com/screenshot.webp',
-            focusArea: 'interactive',
-          },
-        },
-      };
-
-      const result = await toolHandler(request);
-
-      expect(mockImageProcessor.processImage).toHaveBeenCalledWith({
-        type: 'url',
-        data: 'https://example.com/screenshot.webp',
-        mimeType: undefined,
-      });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: '{"webpage_type": "e-commerce", "conversion_elements": ["add_to_cart", "checkout"]}',
-          },
-        ],
-      });
-    });
-
-    it('should reject unknown tool names', async () => {
-      const request = {
-        params: {
-          name: 'unknown_webpage_tool',
-          arguments: {},
-        },
-      };
-
-      await expect(toolHandler(request)).rejects.toThrow('Unknown tool: unknown_webpage_tool');
-    });
-
-    it('should reject requests without arguments', async () => {
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-        },
-      };
-
-      await expect(toolHandler(request)).rejects.toThrow('Arguments are required');
-    });
-
-    it('should handle analysis errors gracefully', async () => {
-      const mockProcessedImage = {
-        data: 'base64screenshot',
-        mimeType: 'image/png',
-        size: 5000,
-      };
-
-      mockImageProcessor.processImage.mockResolvedValue(mockProcessedImage);
-      mockOpenRouterClient.analyzeImage.mockResolvedValue({
-        success: false,
-        error: 'Webpage analysis failed',
-      });
-
-      const request = {
-        params: {
-          name: 'analyze_webpage_screenshot',
-          arguments: {
-            type: 'file',
-            data: '/path/to/screenshot.png',
-          },
-        },
-      };
-
-      const result = await toolHandler(request);
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: 'Error: Webpage analysis failed',
-          },
-        ],
-        isError: true,
-      });
+    expect(result).toEqual({
+      content: [{ type: 'text', text: 'Error: Provider error' }],
+      isError: true,
     });
   });
 });
