@@ -22,15 +22,13 @@ async function main() {
     logger.info('Starting OpenRouter Image MCP Server');
 
     // Initialize configuration
-    const openRouterConfig = config.getOpenRouterConfig();
+    const providerConfig = config.getProviderConfig();
     const serverConfig = config.getServerConfig();
 
     // Initialize provider via the factory.
-    // Phase 2B: the factory reads config.provider and returns the shared
-    // OpenAICompatibleProvider for all six fully-compatible providers.
-    // Commit 5 replaces this call with config.getProviderConfig() and
-    // drops the legacy 'openrouter' literal.
-    const provider = ProviderFactory.create(openRouterConfig);
+    // Phase 2B: the factory reads providerConfig.provider and returns the
+    // shared OpenAICompatibleProvider for all six fully-compatible providers.
+    const provider = ProviderFactory.create(providerConfig);
 
     // Create MCP server
     const server = new Server(
@@ -239,7 +237,7 @@ async function main() {
     await server.connect(transport);
 
     logger.info('OpenRouter Image MCP Server started successfully');
-    logger.info(`Using model: ${openRouterConfig.model}`);
+    logger.info(`Using model: ${providerConfig.model}`);
     logger.info(`Max image size: ${serverConfig.maxImageSize} bytes`);
     logger.info(`Log level: ${serverConfig.logLevel}`);
 
@@ -252,17 +250,17 @@ async function main() {
       logger.info('OpenRouter API connection successful');
     }
 
-    logger.info(`Validating model: ${openRouterConfig.model}`);
+    logger.info(`Validating model: ${providerConfig.model}`);
     // validateModel is optional on the VisionProvider interface (not all
     // providers expose a /models endpoint). Skip validation when absent;
     // the existing startup logs a warning on any validation miss.
     const modelValid = provider.validateModel
-      ? await provider.validateModel(openRouterConfig.model)
+      ? await provider.validateModel(providerConfig.model)
       : false;
     if (!modelValid) {
-      logger.warn(`Model validation failed: ${openRouterConfig.model} - tools may not work as expected`);
+      logger.warn(`Model validation failed: ${providerConfig.model} - tools may not work as expected`);
     } else {
-      logger.info(`Model validation successful: ${openRouterConfig.model}`);
+      logger.info(`Model validation successful: ${providerConfig.model}`);
     }
 
   } catch (error) {
