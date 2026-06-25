@@ -275,7 +275,46 @@ describe('Logger', () => {
       expect(consoleSpy.error).toHaveBeenCalledWith(
         expect.stringContaining('[ERROR] Error occurred')
       );
-      expect(consoleSpy.error).toHaveBeenCalledTimes(1); // No stack trace logged
+      // Phase 3: non-Error payloads are now serialized (D14). The payload
+      // is printed as a second console.error call (JSON.stringify).
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('"message": "Plain error object"')
+      );
+    });
+
+    it('should serialize non-Error object payloads via JSON.stringify (D14)', () => {
+      const logger = Logger.getInstance();
+      const payload = { reason: 'something failed', promise: 'rejected' };
+
+      logger.error('Unhandled Rejection at:', payload);
+
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('[ERROR] Unhandled Rejection at:')
+      );
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('"reason": "something failed"')
+      );
+    });
+
+    it('should serialize string payloads via String() (D14)', () => {
+      const logger = Logger.getInstance();
+
+      logger.error('String reason', 'a string error');
+
+      expect(consoleSpy.error).toHaveBeenCalledWith('a string error');
+    });
+
+    it('should handle unserializable error objects without crashing (D14)', () => {
+      const logger = Logger.getInstance();
+      const circular: any = {};
+      circular.self = circular;
+
+      logger.error('Circular', circular);
+
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('[ERROR] Circular')
+      );
+      expect(consoleSpy.error).toHaveBeenCalledWith('[unserializable error object]');
     });
   });
 });

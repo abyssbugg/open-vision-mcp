@@ -55,6 +55,15 @@ export class Logger {
       console.error(this.formatMessage('error', message));
       if (error && error.stack) {
         console.error(error.stack);
+      } else if (error !== undefined && error !== null) {
+        // Serialize non-Error payloads (e.g., { reason, promise } from
+        // the unhandledRejection handler in index.ts). Without this, the
+        // rejection reason was silently swallowed.
+        try {
+          console.error(typeof error === 'object' ? JSON.stringify(error, null, 2) : String(error));
+        } catch {
+          console.error('[unserializable error object]');
+        }
       }
     }
   }
