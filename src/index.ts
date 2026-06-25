@@ -26,9 +26,11 @@ async function main() {
     const serverConfig = config.getServerConfig();
 
     // Initialize provider via the factory.
-    // Phase 1: 'openrouter' is the only supported provider id.
-    // Phase 2 will widen the ProviderId union and read this from config.
-    const provider = ProviderFactory.create('openrouter', openRouterConfig);
+    // Phase 2B: the factory reads config.provider and returns the shared
+    // OpenAICompatibleProvider for all six fully-compatible providers.
+    // Commit 5 replaces this call with config.getProviderConfig() and
+    // drops the legacy 'openrouter' literal.
+    const provider = ProviderFactory.create(openRouterConfig);
 
     // Create MCP server
     const server = new Server(
