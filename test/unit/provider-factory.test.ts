@@ -75,15 +75,44 @@ describe('ProviderFactory', () => {
       });
     });
 
+    it('should return a ChutesProvider for chutes', () => {
+      const config = makeConfig('chutes', { model: 'deepseek-ai/DeepSeek-V3-0324' });
+      const provider = ProviderFactory.create(config);
+      expect(provider).toBeDefined();
+      expect(provider.capabilities).toEqual({
+        jsonMode: true,
+        modelsEndpoint: true,
+        maxTokensField: 'max_tokens',
+      });
+    });
+
+    it('should return an AzureOpenAIProvider for azure with modelsEndpoint: false', () => {
+      const config = makeConfig('azure', { baseUrl: 'https://resource.openai.azure.com/openai/deployments/dep' });
+      const provider = ProviderFactory.create(config);
+      expect(provider).toBeDefined();
+      expect(provider.capabilities).toEqual({
+        jsonMode: true,
+        modelsEndpoint: false,
+        maxTokensField: 'max_tokens',
+      });
+    });
+
     it('should pass the correct capabilities for each provider', () => {
-      for (const p of ['openrouter', 'openai', 'together', 'deepinfra', 'fireworks', 'groq', 'cerebras'] as ProviderId[]) {
-        const config = makeConfig(p);
+      const expectedCaps: Record<string, any> = {
+        openrouter: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        openai: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        together: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        deepinfra: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        fireworks: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        groq: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        chutes: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        cerebras: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+        azure: { jsonMode: true, modelsEndpoint: false, maxTokensField: 'max_tokens' },
+      };
+      for (const p of Object.keys(expectedCaps) as ProviderId[]) {
+        const config = makeConfig(p, p === 'azure' ? { baseUrl: 'https://x.openai.azure.com/openai/deployments/d' } : p === 'chutes' ? { model: 'm' } : {});
         const provider = ProviderFactory.create(config);
-        expect(provider.capabilities).toEqual({
-          jsonMode: true,
-          modelsEndpoint: true,
-          maxTokensField: 'max_tokens',
-        });
+        expect(provider.capabilities).toEqual(expectedCaps[p]);
       }
     });
 

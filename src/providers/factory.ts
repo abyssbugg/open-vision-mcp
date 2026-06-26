@@ -5,6 +5,8 @@ import {
   VisionProvider,
 } from '../types/index.js';
 import { OpenAICompatibleProvider } from './openai-compatible.js';
+import { ChutesProvider } from './chutes.js';
+import { AzureOpenAIProvider } from './azure.js';
 
 /**
  * Per-provider capability descriptor. All six Phase 2B providers are
@@ -49,11 +51,15 @@ export class ProviderFactory {
       case 'groq':
       case 'cerebras':
         return new OpenAICompatibleProvider(config, capabilities);
+      case 'chutes':
+        return new ChutesProvider(config, capabilities);
+      case 'azure':
+        return new AzureOpenAIProvider(config, capabilities);
       default:
-        // R5: temporarily relaxed from 'satisfies never' to 'as string'.
-        // The remaining 2 new members (chutes, azure) are handled in
-        // commit 8 when their factory cases are added.
-        throw new Error(`Unknown provider: ${config.provider as string}`);
+        // R5: exhaustiveness guard restored. All 9 ProviderId members
+        // are now handled. If a new member is added without a case,
+        // TypeScript flags it here.
+        throw new Error(`Unknown provider: ${config.provider satisfies never}`);
     }
   }
 }
