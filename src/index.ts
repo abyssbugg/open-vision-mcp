@@ -19,21 +19,22 @@ async function main() {
   const config = Config.getInstance();
 
   try {
-    logger.info('Starting OpenRouter Image MCP Server');
-
     // Initialize configuration
     const providerConfig = config.getProviderConfig();
     const serverConfig = config.getServerConfig();
 
+    logger.info(`Starting ${providerConfig.provider} Image MCP Server`);
+
     // Initialize provider via the factory.
-    // Phase 2B: the factory reads providerConfig.provider and returns the
-    // shared OpenAICompatibleProvider for all six fully-compatible providers.
+    // The factory reads providerConfig.provider and returns the appropriate
+    // VisionProvider implementation (shared OpenAICompatibleProvider for
+    // OpenAI-compatible providers, dedicated adapters for others).
     const provider = ProviderFactory.create(providerConfig);
 
     // Create MCP server
     const server = new Server(
       {
-        name: 'openrouter-image-mcp',
+        name: 'vision-mcp',
         version: '1.0.0',
       },
       {
@@ -49,7 +50,7 @@ async function main() {
       const tools: Tool[] = [
         {
           name: 'analyze_image',
-          description: 'Analyze images using OpenRouter\'s vision models. Supports various input formats including base64, file paths, and URLs.',
+          description: 'Analyze images using the configured vision provider. Supports various input formats including base64, file paths, and URLs.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -236,18 +237,18 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
 
-    logger.info('OpenRouter Image MCP Server started successfully');
+    logger.info(`${providerConfig.provider} Image MCP Server started successfully`);
     logger.info(`Using model: ${providerConfig.model}`);
     logger.info(`Max image size: ${serverConfig.maxImageSize} bytes`);
     logger.info(`Log level: ${serverConfig.logLevel}`);
 
     // Validate connection and model AFTER connecting (non-blocking for MCP client)
-    logger.info('Testing OpenRouter API connection...');
+    logger.info(`Testing ${providerConfig.provider} API connection...`);
     const connectionTest = await provider.testConnection();
     if (!connectionTest) {
-      logger.error('Failed to connect to OpenRouter API - tools may not work');
+      logger.error(`Failed to connect to ${providerConfig.provider} API - tools may not work`);
     } else {
-      logger.info('OpenRouter API connection successful');
+      logger.info(`${providerConfig.provider} API connection successful`);
     }
 
     logger.info(`Validating model: ${providerConfig.model}`);
