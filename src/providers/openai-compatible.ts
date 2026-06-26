@@ -72,20 +72,19 @@ export class OpenAICompatibleProvider implements VisionProvider {
         return false;
       }
 
-      // Check if model supports vision
+      // Check if model supports vision based on provider-reported metadata.
+      // D5 (Phase 2C): removed the brittle vision-by-name heuristic
+      // (modelLower.includes('gemini') etc.). The method now trusts the
+      // user's model id and only warns based on the provider's actual
+      // /models response. Note: providers whose /models response doesn't
+      // include architecture.modality (e.g., some OpenAI-compatible
+      // providers) will log 'Model may not support vision' more often.
+      // This is intended — the method trusts the user's model id and
+      // only warns on provider-reported metadata, not name patterns.
       const model = models.find((m: any) => m.id === modelId);
-      const modelLower = modelId.toLowerCase();
       const supportsVision = model?.architecture?.modality?.includes('vision') ||
                             model?.architecture?.modality?.includes('image') ||
-                            model?.capabilities?.vision ||
-                            modelLower.includes('vision') ||
-                            modelLower.includes('claude-3') ||
-                            modelLower.includes('claude-3.5') ||
-                            modelLower.includes('gpt-4-vision') ||
-                            modelLower.includes('gpt-4o') ||
-                            modelLower.includes('gemini') ||
-                            modelLower.includes('llama-3.2-90b-vision') ||
-                            modelLower.includes('llama-3.2-11b-vision');
+                            model?.capabilities?.vision;
 
       if (!supportsVision) {
         this.logger.warn(`Model may not support vision: ${modelId}`);

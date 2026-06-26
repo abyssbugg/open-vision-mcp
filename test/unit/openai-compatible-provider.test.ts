@@ -91,6 +91,18 @@ describe('OpenAICompatibleProvider', () => {
       mockAxiosInstance.get.mockResolvedValue({ data: { data: [] } });
       expect(await provider.validateModel!('nonexistent')).toBe(false);
     });
+
+    it('D5: should return true for a model whose name does not match any vision pattern (heuristic removed)', async () => {
+      // After D5, validateModel no longer uses model-name pattern matching.
+      // It trusts the user's model id and only warns based on provider-
+      // reported metadata (architecture.modality). A model with a custom
+      // name and no modality info should still return true (found in /models).
+      provider = new OpenAICompatibleProvider(BASE_CONFIG, DEFAULT_CAPABILITIES);
+      mockAxiosInstance.get.mockResolvedValue({
+        data: { data: [{ id: 'my-custom-model-12345' }] },  // no architecture.modality
+      });
+      expect(await provider.validateModel!('my-custom-model-12345')).toBe(true);
+    });
   });
 
   describe('analyzeImage', () => {
