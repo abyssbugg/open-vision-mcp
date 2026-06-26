@@ -1,300 +1,140 @@
-<div align="center">
+# open-vision-mcp
 
-# 🖼️🤖 OpenRouter Image MCP Server
+**Provider-neutral Vision MCP Server** — image analysis via 9 inference providers through a single MCP server.
 
-[![npm version](https://badge.fury.io/js/openrouter-image-mcp.svg)](https://badge.fury.io/js/openrouter-image-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-**🔥 Supercharge your AI agents with powerful image analysis capabilities!** 🔥
-
-A blazing-fast ⚡ MCP (Model Context Protocol) server that enables AI agents to **see and understand images** using OpenRouter's cutting-edge vision models. Perfect for screenshots, photos, diagrams, and any visual content! 📸✨
-
-</div>
+> **⚠️ Validation status:** This server is **engineering-validated** (163/163 unit/integration tests pass) but **live provider validation is pending**. No provider has been tested end-to-end with real API credentials yet. Cerebras vision support is specifically **unverified**. See the [Validation Status](#validation-status) section below.
 
 ---
 
-## 🌟 What Makes This Special?
+## What It Does
 
-- **🎯 Multi-Model Support**: Choose from Claude, Gemini, GPT-4 Vision, and more!
-- **🚀 Lightning Fast**: Built with TypeScript and optimized for performance
-- **🔧 Flexible Input**: Support for file paths, URLs, and base64 data
-- **💰 Cost-Effective**: Smart model selection for the best price-to-quality ratio
-- **🛡️ Production Ready**: Robust error handling, retries, and comprehensive logging
-- **🎨 Easy Integration**: Works seamlessly with Claude Code, Cline, Cursor, and more!
+A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that gives AI agents the ability to **see and understand images** using any of 9 supported inference providers. All providers are accessed through a single code path with per-provider configuration.
+
+Perfect for screenshots, photos, diagrams, webpage analysis, and mobile app UI review.
 
 ---
 
-## 🚀 Quick Start
+## Supported Providers
 
-### Prerequisites 📋
+| Provider | `PROVIDER` | Default `baseUrl` | Suggested vision model | `MODEL` required? | Notes |
+|---|---|---|---|---|---|
+| OpenRouter | `openrouter` | `https://openrouter.ai/api/v1` | `google/gemini-2.0-flash-exp:free` | No (default: `anthropic/claude-3.5-sonnet`) | Sends `HTTP-Referer`/`X-Title` ranking headers |
+| OpenAI | `openai` | `https://api.openai.com/v1` | `gpt-4o` | No | — |
+| Together | `together` | `https://api.together.xyz/v1` | (check Together's model catalog) | **Yes** | Multi-model aggregator |
+| DeepInfra | `deepinfra` | `https://api.deepinfra.com/v1/openai` | (check DeepInfra's catalog) | **Yes** | Multi-model aggregator |
+| Fireworks | `fireworks` | `https://api.fireworks.ai/inference/v1` | (check Fireworks' catalog) | **Yes** | Multi-model aggregator |
+| Groq | `groq` | `https://api.groq.com/openai/v1` | `llama-3.2-90b-vision-preview` | No | Fast inference |
+| Chutes | `chutes` | `https://llm.chutes.ai/v1` | (check Chutes' `/models` for `supported_features`) | **Yes** | Per-model capability preflight |
+| Cerebras | `cerebras` | `https://api.cerebras.ai/v1` | `llama-4-scout-17b-16e-instruct` | No | ⚠️ Vision support **unverified** |
+| Azure OpenAI | `azure` | (user-supplied deployment URL) | (deployment-configured) | No (ignored) | Requires `BASE_URL` with `?api-version=`; uses `api-key` header |
 
-- **Node.js** 18+ ⚡
-- **OpenRouter API Key** 🔑 (Get one at [openrouter.ai](https://openrouter.ai))
-- **Your favorite MCP client** 🤖 (Claude Code, Cline, etc.)
+---
 
-### Installation 📦
+## Quick Start
+
+### Prerequisites
+
+- **Node.js** 18+
+- An API key for at least one provider above
+
+### Option 1: Use with npx (recommended)
 
 ```bash
-# 🌟 Option 1: Use immediately with npx (recommended)
-npx openrouter-image-mcp
+# Set your provider, API key, and model
+export PROVIDER=openrouter
+export API_KEY=sk-or-v1-your-api-key-here
+export MODEL=google/gemini-2.0-flash-exp:free
 
-# 🚀 Option 2: Install globally for frequent use
-npm install -g openrouter-image-mcp
+# Run the server
+npx open-vision-mcp
+```
 
-# 🛠️ Option 3: Clone and build locally
-git clone https://github.com/JonathanJude/openrouter-image-mcp.git
-cd openrouter-image-mcp
+### Option 2: Install globally
+
+```bash
+npm install -g open-vision-mcp
+open-vision-mcp
+```
+
+### Option 3: Clone and build
+
+```bash
+git clone https://github.com/abyssbugg/open-image-mcp.git
+cd open-image-mcp
 npm install
 npm run build
-npm install -g .
-```
-
-> **💡 Why npx is recommended**: No installation required, always gets the latest version, and works perfectly for MCP server usage!
-
-### Configuration ⚙️
-
-The MCP server requires an OpenRouter API key. You can configure it in several ways:
-
-#### **Method 1: Environment Variables (Recommended)**
-```bash
-# 🔑 Set your API key
-export OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
-
-# 🎯 Set model (uses free model by default)
-export OPENROUTER_MODEL=google/gemini-2.0-flash-exp:free
-```
-
-#### **Method 2: .env File**
-```bash
-# 📋 Copy the environment template
-cp .env.example .env
-
-# ✏️ Edit with your credentials
-nano .env
-```
-
-Add your OpenRouter credentials to `.env`:
-
-```bash
-# 🔑 Required
-OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
-
-# 🆓 Model (FREE by default - great for getting started!)
-OPENROUTER_MODEL=google/gemini-2.0-flash-exp:free
-
-# 🎛️ Optional settings
-LOG_LEVEL=info
-MAX_IMAGE_SIZE=10485760
-RETRY_ATTEMPTS=3
-```
-
-#### **Method 3: Direct Configuration in MCP Client**
-Add the API key directly in your MCP client configuration (see examples below).
-
----
-
-## 🏠 **Works Locally - No Restarts Needed!** 🎯
-
-**🚀 HUGE ADVANTAGE**: This MCP server works perfectly locally with **zero manual intervention** once configured! No restarts, no manual server starts, no fiddling with settings. It just **works**! ✨
-
-### 🔄 **How It Works Automatically**
-
-1. **🎯 Configure once** → Set up your MCP client one time
-2. **🚀 Auto-launches** → Client starts the server automatically
-3. **🔧 Connects** → Validates API and loads models instantly
-4. **🛠️ Ready to use** → All 3 tools available immediately
-
-### ⚡ **Local Setup Benefits**
-
-- **🔥 Fire-and-forget**: Set up once, forget forever
-- **⚡ Lightning startup**: ~5 seconds total ready time
-- **🔄 Persistent across restarts**: Survives laptop shutdowns
-- **📱 Cross-platform**: Works on any OS with Node.js
-- **🎯 Zero maintenance**: No babysitting required
-
----
-
-## 🔧 MCP Configuration
-
-### **Option 1: Using npx (Recommended - No Installation Required)**
-
-The easiest way to use this MCP server is with npx, which automatically downloads and runs the package without any installation:
-
-#### **For Claude Code**
-Add to `~/.claude.json`:
-```json
-{
-  "mcp": {
-    "servers": {
-      "openrouter-image": {
-        "command": "npx",
-        "args": ["openrouter-image-mcp"],
-        "env": {
-          "OPENROUTER_API_KEY": "sk-or-v1-your-api-key-here",
-          "OPENROUTER_MODEL": "google/gemini-2.0-flash-exp:free"
-        }
-      }
-    }
-  }
-}
-```
-
-#### **For Claude Desktop**
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "openrouter-image": {
-      "command": "npx",
-      "args": ["openrouter-image-mcp"],
-      "env": {
-        "OPENROUTER_API_KEY": "sk-or-v1-your-api-key-here",
-        "OPENROUTER_MODEL": "google/gemini-2.0-flash-exp:free"
-      }
-    }
-  }
-}
-```
-
-#### **For Other MCP Clients**
-- **Cursor**: `~/.cursor/mcp.json`
-- **Cline**: `~/.cline/mcp.json`
-- **Windsurf**: MCP settings file
-- **Other agents**: Check your agent's MCP documentation
-
-**✨ Benefits of npx:**
-- 🚀 **No installation needed** - works immediately
-- 🔄 **Always latest version** - automatically updates
-- 📱 **Cross-platform** - works everywhere Node.js is installed
-- 🧹 **Clean system** - no global packages required
-
-### **Option 2: Global Installation (For Frequent Users)**
-
-If you plan to use this MCP server frequently, install it globally:
-
-```bash
-npm install -g openrouter-image-mcp
-```
-
-Then use this configuration:
-```json
-{
-  "mcp": {
-    "servers": {
-      "openrouter-image": {
-        "command": "openrouter-image-mcp",
-        "env": {
-          "OPENROUTER_API_KEY": "sk-or-v1-your-api-key-here",
-          "OPENROUTER_MODEL": "google/gemini-2.0-flash-exp:free"
-        }
-      }
-    }
-  }
-}
-```
-
-**Benefits of global installation:**
-- ⚡ **Faster startup** - no download time
-- 🌐 **Works offline** - once installed
-- 🔧 **Simpler command** - shorter configuration
-
-### **Option 3: Local Development**
-
-If you cloned the repo locally for development:
-```json
-{
-  "mcpServers": {
-    "openrouter-image": {
-      "command": "node",
-      "args": ["/path/to/openrouter-image-mcp/dist/index.js"],
-      "env": {
-        "OPENROUTER_API_KEY": "sk-or-v1-your-api-key-here",
-        "OPENROUTER_MODEL": "google/gemini-2.0-flash-exp:free"
-      }
-    }
-  }
-}
-```
-
-> **🎯 Pro Tip**: Replace the API key with your actual OpenRouter key. The free model works great for most use cases!
-
-> **💡 Recommendation**: Start with **npx** (Option 1) - it's the easiest and most reliable way to get started!
-
-### 💡 **Pro Tips for Local Setup**
-
-#### **🎯 Path Management**
-- **Absolute paths work best**: `/path/to/openrouter-image-mcp/dist/index.js`
-- **Avoid relative paths**: May break when switching directories
-- **Use your actual path**: Update the examples with your real project location
-
-#### **🔧 Environment Variables**
-- **Set in `.env` file**: Keep your API key secure
-- **OR set in system**: `export OPENROUTER_API_KEY=sk-or-v1-...`
-- **Test quickly**: Run `OPENROUTER_API_KEY=... node dist/index.js`
-
-#### **🚀 Quick Verification**
-```bash
-# 🔍 Test if server works
-export OPENROUTER_API_KEY=sk-or-v1-your-key
-export OPENROUTER_MODEL=google/gemini-2.5-flash-lite-preview-09-2025
 node dist/index.js
-
-# ✅ Should see logs: "Starting OpenRouter Image MCP Server"
 ```
-
-#### **🐛 Troubleshooting Local Issues**
-
-**❌ "Command not found"**
-```bash
-# ✅ Use absolute path to node
-"$(which node)" "/path/to/openrouter-image-mcp/dist/index.js"
-```
-
-**❌ "File not found"**
-```bash
-# ✅ Verify the built file exists
-ls -la /path/to/openrouter-image-mcp/dist/index.js
-
-# 📝 Rebuild if missing
-npm run build
-```
-
-**❌ "API key required"**
-```bash
-# ✅ Check your environment variables
-echo $OPENROUTER_API_KEY
-
-# 🔧 Or create .env file
-echo "OPENROUTER_API_KEY=sk-or-v1-your-key" > .env
-```
-
-### 🌟 **Local Development Workflow**
-
-1. **🛠️ Build once**: `npm run build`
-2. **⚙️ Configure once**: Add MCP config to your AI agent
-3. **🔄 Restart agent**: Pick up the new configuration
-4. **🎯 Use immediately**: No manual server management needed!
 
 ---
 
-## 🔥 Usage Examples
+## Configuration
 
-### With Claude Code 🤖
+All configuration is via environment variables.
 
-Add this to your `~/.claude.json`:
+### Environment Variables
+
+| Variable | Required? | Default | Purpose |
+|---|---|---|---|
+| `PROVIDER` | No | `openrouter` | Provider discriminator (one of the 9 above) |
+| `API_KEY` | **Yes** | — | API key for the selected provider |
+| `MODEL` | Depends | Per-provider default | Model id (required for `together`, `deepinfra`, `fireworks`, `chutes`; ignored by `azure`) |
+| `BASE_URL` | No (yes for `azure`) | Per-provider default | Full-prefix base URL (must include `/v1` or `/api/v1` as appropriate). Azure requires the full deployment URL with `?api-version=`. |
+| `EXTRA_HEADERS` | No | Per-provider default | JSON object string of extra HTTP headers (e.g., OpenRouter's `HTTP-Referer`/`X-Title`) |
+| `LOG_LEVEL` | No | `info` | Log level: `debug`, `info`, `warn`, `error` |
+| `MAX_IMAGE_SIZE` | No | `10485760` (10MB) | Maximum image size in bytes |
+| `RETRY_ATTEMPTS` | No | `3` | (Reserved — not yet implemented) |
+| `PORT` | No | `3000` | (Reserved — not used by stdio transport) |
+
+### Legacy Environment Variables (backwards compatible)
+
+If the new variables above are unset, the server falls back to the legacy OpenRouter variables:
+
+| Legacy variable | Maps to |
+|---|---|
+| `OPENROUTER_API_KEY` | `API_KEY` |
+| `OPENROUTER_MODEL` | `MODEL` |
+| `OPENROUTER_BASE_URL` | `BASE_URL` |
+
+**Resolution precedence:** new variable > legacy variable > per-provider default.
+
+**Existing OpenRouter users** with only `OPENROUTER_API_KEY` set continue to work with zero config changes. The server defaults to `PROVIDER=openrouter` and lifts the legacy variables into the new fields.
+
+### Azure OpenAI Configuration
+
+Azure is the only provider that **requires** `BASE_URL` (no per-provider default). The `BASE_URL` must be the full deployment URL including the `api-version` query parameter:
+
+```bash
+export PROVIDER=azure
+export API_KEY=your-azure-resource-key
+export BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment?api-version=2024-02-15-preview
+```
+
+For Azure, `MODEL` is ignored — the deployment name is in `BASE_URL`. Azure uses the `api-key` header (not `Authorization: Bearer`). Azure has no `/models` endpoint; `testConnection` and `validateModel` return `true` without making HTTP calls (the first `analyze_image` call is the real health check).
+
+---
+
+## MCP Client Configuration
+
+### Claude Code
+
+Add to `~/.claude.json`:
 
 ```json
 {
   "mcp": {
     "servers": {
-      "openrouter-image": {
+      "vision": {
         "command": "npx",
-        "args": ["openrouter-image-mcp"],
+        "args": ["open-vision-mcp"],
         "env": {
-          "OPENROUTER_API_KEY": "sk-or-v1-your-api-key-here",
-          "OPENROUTER_MODEL": "google/gemini-2.0-flash-exp:free"
+          "PROVIDER": "openrouter",
+          "API_KEY": "sk-or-v1-your-key-here",
+          "MODEL": "google/gemini-2.0-flash-exp:free"
         }
       }
     }
@@ -302,248 +142,179 @@ Add this to your `~/.claude.json`:
 }
 ```
 
-### With Claude Desktop 🖥️
+### Claude Desktop
 
-Add this to your `claude_desktop_config.json`:
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "openrouter-image": {
+    "vision": {
       "command": "npx",
-      "args": ["openrouter-image-mcp"],
+      "args": ["open-vision-mcp"],
       "env": {
-        "OPENROUTER_API_KEY": "sk-or-v1-your-api-key-here",
-        "OPENROUTER_MODEL": "google/gemini-2.0-flash-exp:free"
+        "PROVIDER": "openai",
+        "API_KEY": "sk-your-key-here",
+        "MODEL": "gpt-4o"
       }
     }
   }
 }
 ```
 
-### 🎯 Amazing Things You Can Do!
+### Other MCP Clients
+
+- **Cursor:** `~/.cursor/mcp.json`
+- **Cline:** `~/.cline/mcp.json`
+- **Windsurf:** MCP settings file
+- Check your agent's MCP documentation
+
+### Switching Providers
+
+Change only the env vars — no code changes:
 
 ```bash
-# 📸 Analyze any screenshot
-"Analyze this screenshot: /path/to/screenshot.png"
+# Switch from OpenRouter to Groq
+export PROVIDER=groq
+export API_KEY=gsk-your-groq-key
+export MODEL=llama-3.2-90b-vision-preview
 
-# 🔍 Extract text from images
-"What text do you see in this document: /path/to/scan.jpg"
-
-# 🎨 Review UI designs
-"Review this UI mockup for accessibility issues: /path/to/design.png"
-
-# 📱 Debug mobile apps
-"Analyze this mobile app screenshot for UX problems: /path/to/app.png"
-
-# 🌐 Analyze webpages
-"What can you tell me about this webpage: https://example.com/screenshot.png"
+npx open-vision-mcp
 ```
 
 ---
 
-## 🛠️ Available Tools
+## Tools
 
-### 🖼️ `analyze_image` - General Image Analysis
-Perfect for photos, diagrams, charts, and general visual content!
+The server exposes 3 MCP tools. Tool names and schemas are identical for all providers.
+
+### `analyze_image`
+
+General image analysis. Supports base64, file paths, and URLs.
 
 **Parameters:**
-- `type` 📁 Input type: `file`, `url`, or `base64`
-- `data` 📸 Image data (path, URL, or base64 string)
-- `prompt` 💭 Custom analysis prompt
-- `format` 📊 Output: `text` or `json`
-- `maxTokens` 🔢 Maximum response tokens (default: 4000)
-- `temperature` 🌡️ Creativity 0-2 (default: 0.1)
+- `type` — `base64` | `file` | `url`
+- `data` — image data (base64 string, file path, or URL)
+- `mimeType` — MIME type (required for `base64`)
+- `prompt` — custom analysis prompt (optional)
+- `format` — `text` | `json` (default: `text`)
+- `maxTokens` — max response tokens (default: 4000)
+- `temperature` — sampling temperature 0–2 (default: 0.1)
 
-### 🌐 `analyze_webpage_screenshot` - Webpage Specialist
-Designed specifically for web page analysis and debugging!
+### `analyze_webpage_screenshot`
 
-**Features:**
-- 🎯 Layout analysis
-- 📱 Content extraction
-- 🔗 Navigation review
-- 📝 Form analysis
-- ♿ Accessibility evaluation
-- 📊 Structured JSON output
+Webpage screenshot specialist. Extracts content, layout, navigation, forms, and accessibility info.
 
-### 📱 `analyze_mobile_app_screenshot` - Mobile App Expert
-Specialized for mobile application UI/UX analysis!
+**Additional parameters:**
+- `focusArea` — `layout` | `content` | `navigation` | `forms` | `interactive` | `accessibility`
+- `includeAccessibility` — include accessibility analysis (default: `true`)
+- `format` — `text` | `json` (default: `json`)
 
-**Features:**
-- 🍎 iOS/🤖 Android platform detection
-- 🎨 UI design review
-- 👆 User experience evaluation
-- ♿ Accessibility analysis
-- 📊 UX heuristic scoring
-- 🚀 Performance insights
+### `analyze_mobile_app_screenshot`
+
+Mobile app screenshot specialist. UI design, UX, platform conventions, accessibility.
+
+**Additional parameters:**
+- `platform` — `ios` | `android` | `auto-detect` (default: `auto-detect`)
+- `focusArea` — `ui-design` | `user-experience` | `navigation` | `accessibility` | `performance` | `onboarding`
+- `includeUXHeuristics` — include Nielsen's 10 heuristics (default: `true`)
+- `format` — `text` | `json` (default: `json`)
 
 ---
 
-## 💰 Vision Model Recommendations
+## Validation Status
 
-| Model | Cost | Vision Quality | Best For |
-|-------|------|----------------|----------|
-| 🆓 `google/gemini-2.0-flash-exp:free` | **FREE** | ⭐⭐⭐⭐⭐ | **Great for beginners!** General analysis, docs |
-| 🆓 `meta-llama/llama-3.2-90b-vision-instruct` | **FREE** | ⭐⭐⭐⭐ | Charts, diagrams, technical content |
-| 🌟 `google/gemini-2.5-flash-lite-preview-09-2025` | 💰 **Very Low** | ⭐⭐⭐⭐⭐ | **Best value!** High quality at low cost |
-| 🧠 `anthropic/claude-3-5-sonnet-20241022` | 💰💰 Medium | ⭐⭐⭐⭐⭐ | Detailed analysis, complex reasoning |
-| 🔥 `anthropic/claude-3-5-haiku-20241022` | 💰💰💰 Higher | ⭐⭐⭐⭐⭐ | High accuracy, professional use |
+### Engineering Validation: COMPLETE
 
-### **🎯 Recommended Models**
-- **🆓 Start with FREE models**: `google/gemini-2.0-flash-exp:free` works excellently for most use cases
-- **💰 Upgrade when needed**: Move to paid models only if you need higher accuracy or specific features
-- **🔥 Best performance**: `anthropic/claude-3-5-sonnet-20241022` for professional analysis
+- **163/163 unit + integration tests pass** (JSON reporter; `npm test`)
+- **`npm run build` exit 0** — TypeScript strict mode, zero errors
+- **`npm run lint` exit 0** — ESLint, zero errors
+- **Sentinel 8/8** — black-box MCP protocol test over stdio
+- **Phase 2B.5 Stage 1: 10/10 mandatory gates passed** — keyless validation (configuration, request construction, auth headers, error handling, image processing, timeouts, capabilities, base URLs, logging)
+- **MCP contract byte-identical to baseline** — tool names, schemas, and output format unchanged from the original upstream
+- **Backwards compatibility verified** — legacy `OPENROUTER_API_KEY` env var fallback works end-to-end
 
-### **💡 Cost Tips**
-- Free models handle ~80% of use cases perfectly
-- Paid models cost ~$0.001-0.01 per image
-- Monitor usage at [OpenRouter Dashboard](https://openrouter.ai)
+### Operational Validation: PENDING
 
----
+- **Live provider validation (Stage 2):** paused pending valid API credentials. No provider has been tested end-to-end through `analyze_image` with a real key. Stage 2 may be executed at any future time when credentials become available.
+- **Cerebras vision support: UNVERIFIED.** The `llama-4-scout-17b-16e-instruct` model is configured as the default, but whether it accepts multimodal (image) input has not been confirmed. If it doesn't support vision, the user gets a clear provider-aware error at runtime.
+- **Provider response shapes:** unit tests mock axios and assert the request/response shape. Live APIs have not been confirmed to match the mocked shapes, though all providers are OpenAI-compatible per their official documentation.
 
-## 🛠️ Development
+### What This Means for Users
 
-### Local Setup 🔧
-
-```bash
-# 🍴 Clone the repository
-git clone https://github.com/your-username/openrouter-image-mcp.git
-cd openrouter-image-mcp
-
-# 📦 Install dependencies
-npm install
-
-# 🔨 Build the project
-npm run build
-
-# 🚀 Start in development mode
-npm run dev
-
-# 🧪 Run tests
-npm test
-
-# 🔍 Lint and format
-npm run lint
-npm run format
-```
-
-#
----
-
-## 🧪 Testing
-
-### Run Test Suite 🧪
-
-```bash
-# 🧪 Run all tests
-npm test
-
-# 📊 Run with coverage
-npm run test:coverage
-
-# 🔍 Debug mode
-DEBUG=* npm test
-```
-
-### Manual Testing 🎯
-
-```bash
-# 📸 Test with a sample image
-node test-image-analysis.js
-
-# 🔍 Test different models
-OPENROUTER_MODEL=anthropic/claude-sonnet-4 node test-image-analysis.js
-
-# 🚀 Test with URL input
-echo '{"type":"url","data":"https://example.com/image.png","prompt":"What do you see?"}' | node dist/index.js
-```
+The server is **architecturally sound and thoroughly unit-tested**. The provider abstraction, configuration resolution, request construction, error handling, and MCP protocol are all verified. However, **no live API call has been made against any provider**. Users should be aware that:
+1. The request body shape is correct per provider documentation (verified in Phase 2A research), but not confirmed against a live 200 response.
+2. Cerebras may not support vision input — use a different provider if vision is critical.
+3. If a provider's API has changed since the Phase 2A research (conducted June 2026), the server may need a config update.
 
 ---
 
-## 🤝 Contributing
-
-Contributions welcome! Fork the repo, make changes, and submit a pull request. Please follow the existing code style and add tests for new features.
-
----
-
-## 📄 Supported Image Formats
+## Supported Image Formats
 
 | Format | Extension | MIME Type | Status |
-|--------|------------|-----------|--------|
-| 🖼️ JPEG | `.jpg`, `.jpeg` | `image/jpeg` | ✅ |
-| 🖼️ PNG | `.png` | `image/png` | ✅ |
-| 🖼️ WebP | `.webp` | `image/webp` | ✅ |
-| 🖼️ GIF | `.gif` | `image/gif` | ✅ |
-| 📏 **Max Size** | - | - | **10MB** (configurable) |
+|---|---|---|---|
+| JPEG | `.jpg`, `.jpeg` | `image/jpeg` | ✅ |
+| PNG | `.png` | `image/png` | ✅ |
+| WebP | `.webp` | `image/webp` | ✅ |
+| GIF | `.gif` | `image/gif` | ✅ |
+| **Max size** | — | — | **10MB** (configurable via `MAX_IMAGE_SIZE`) |
+
+MIME type detection is signature-based (no native dependencies).
 
 ---
 
-## 🛡️ Security & Privacy
-
-- **🔐 API Keys**: Loaded from environment variables only
-- **🚫 No Sensitive Logging**: Personal data never logged
-- **✅ Input Validation**: All parameters validated
-- **📏 Size Limits**: Configurable file size restrictions
-- **🔒 HTTPS Only**: All API communications encrypted
-- **🗑️ Data Cleanup**: Temporary files automatically removed
-
----
-
-## 📚 Troubleshooting
-
-### 🔧 Common Issues & Solutions
-
-#### 🔑 "OPENROUTER_API_KEY environment variable is required"
-```bash
-# ✅ Solution: Set your API key
-export OPENROUTER_API_KEY=sk-or-v1-your-key-here
-# Or add to .env file
-```
-
-#### 🤖 "Invalid or unsupported model"
-```bash
-# ✅ Check available models
-curl -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  https://openrouter.ai/api/v1/models | jq '.data[] | select(.architecture.input_modalities | contains(["image"])) | .id'
-```
-
-#### 📡 "Failed to connect to OpenRouter API"
-```bash
-# ✅ Test connection
-curl -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  https://openrouter.ai/api/v1/models
-```
-
-#### 📏 "Image size exceeds maximum"
-```bash
-# ✅ Increase limit or compress image
-export MAX_IMAGE_SIZE=20971520  # 20MB
-```
-
-### 🐛 Debug Mode
+## Development
 
 ```bash
-# 🔍 Enable detailed logging
-export LOG_LEVEL=debug
-npm start
+# Install dependencies
+npm install
 
-# 📊 Monitor API usage
-curl -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-  https://openrouter.ai/api/v1/auth/key
+# Build
+npm run build
+
+# Run in development mode
+npm run dev
+
+# Run tests
+npm test                          # all tests (JSON reporter for counts)
+npx vitest run test/unit          # unit tests only
+npx vitest run test/integration   # integration tests only
+
+# Lint and format
+npm run lint
+npm run format
+
+# Clean
+npm run clean
 ```
 
 ---
 
+## Troubleshooting
 
-## 📄 License
+### "API_KEY environment variable is required"
+Set `API_KEY` (or the legacy `OPENROUTER_API_KEY`) to your provider's API key.
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+### "MODEL environment variable is required for provider 'together'"
+The `together`, `deepinfra`, `fireworks`, and `chutes` providers are multi-model aggregators with no default model. Set `MODEL` to a vision-capable model id from the provider's catalog.
 
+### "Unknown PROVIDER 'xyz'"
+The `PROVIDER` value must be one of: `openrouter`, `openai`, `together`, `deepinfra`, `fireworks`, `groq`, `chutes`, `cerebras`, `azure`.
 
-<div align="center">
+### "BASE_URL is required for provider 'azure'"
+Azure requires `BASE_URL` to be the full deployment URL including `?api-version=`. There is no per-provider default.
 
-**🚀 Ready to give your AI agents the power of sight?**
+### "<provider> API Error: ..."
+The error message includes the provider id (e.g., `openai API Error: Invalid API key`). This confirms the provider-aware error handling is working. Check your API key and model id.
 
-**[⭐ Star this repo](https://github.com/your-username/openrouter-image-mcp) • [🐛 Report Issues](https://github.com/your-username/openrouter-image-mcp/issues) • [💡 Suggest Features](https://github.com/your-username/openrouter-image-mcp/discussions)**
+---
 
-Made with ❤️ by the open-source community
+## Attribution
+
+This project is a fork of [JonathanJude/openrouter-image-mcp](https://github.com/JonathanJude/openrouter-image-mcp) (MIT license), refactored to be provider-neutral with support for 9 inference providers.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
