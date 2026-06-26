@@ -24,20 +24,12 @@ export interface ImageAnalysisResult {
   };
 }
 
-export interface OpenRouterConfig {
-  apiKey: string;
-  model: string;
-  baseUrl?: string;
-}
-
 /**
  * Phase 2B unified provider configuration. Carries the provider discriminator
  * alongside the credentials and per-provider settings.
  *
- * `OpenRouterConfig` is preserved above as a structural supertype so that
- * any external references continue to type-check. Phase 3 removed the
- * runtime getOpenRouterConfig() accessor; the type alias is retained
- * indefinitely (zero-cost, potential external-consumer compatibility).
+ * Phase 4 retired the legacy OpenRouterConfig interface alias at the
+ * package rename boundary. Use ProviderConfig for all provider configuration.
  */
 export interface ProviderConfig {
   provider: ProviderId;

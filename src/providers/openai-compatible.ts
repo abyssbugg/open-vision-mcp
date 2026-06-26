@@ -18,7 +18,7 @@ import { Logger } from '../utils/logger.js';
  * The method bodies are carried over verbatim from OpenRouterClient. The
  * only changes are:
  *  - constructor accepts ProviderConfig (with extraHeaders) instead of
- *    OpenRouterConfig
+ *    the legacy OpenRouterConfig (retired in Phase 4)
  *  - capabilities are injected per-provider by the factory rather than
  *    hardcoded
  *  - HTTP-Referer / X-Title come from config.extraHeaders instead of being
