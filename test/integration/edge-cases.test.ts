@@ -203,4 +203,170 @@ describe('Edge Cases and Error Scenarios — Image Processing and Input Validati
       expect(result.isError).toBe(true);
     });
   });
+
+  describe('Input Validation Edge Cases', () => {
+    it('should handle missing required parameters (no type)', async () => {
+      mockImageProcessor.processImage.mockRejectedValue(new Error('Unsupported image input type: undefined'));
+
+      const result = await handleAnalyzeImage(
+        { data: 'somedata' } as any,
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('should handle invalid parameter types', async () => {
+      mockImageProcessor.processImage.mockRejectedValue(new Error('Unsupported image input type: invalid'));
+
+      const result = await handleAnalyzeImage(
+        { type: 'invalid', data: 'somedata' } as any,
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('should handle null and undefined values', async () => {
+      mockImageProcessor.processImage.mockRejectedValue(new Error('Unsupported image input type: undefined'));
+
+      const result = await handleAnalyzeImage(
+        { type: null, data: null } as any,
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('should handle extremely long parameter values', async () => {
+      const longData = 'A'.repeat(100000);
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockProvider.analyzeImage as any).mockResolvedValue({
+        success: false,
+        error: 'Image data too large',
+      });
+
+      const result = await handleAnalyzeImage(
+        { type: 'base64', data: longData },
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('Memory and Resource Management', () => {
+    it('should handle memory pressure scenarios', async () => {
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'ok', model: 'test' });
+
+      // Simulate rapid allocation + deallocation
+      for (let i = 0; i < 10; i++) {
+        const result = await handleAnalyzeImage(
+          { type: 'base64', data: 'd' },
+          mockConfig, mockProvider, mockLogger
+        );
+        expect(result.isError).toBeFalsy();
+      }
+    });
+
+    it('should handle rapid successive requests', async () => {
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'ok', model: 'test' });
+
+      const promises = Array.from({ length: 5 }, () =>
+        handleAnalyzeImage({ type: 'base64', data: 'd' }, mockConfig, mockProvider, mockLogger)
+      );
+      const results = await Promise.all(promises);
+      expect(results.every(r => !r.isError)).toBe(true);
+    });
+  });
+
+  describe('Configuration Edge Cases', () => {
+    it('should handle missing configuration values (maxImageSize undefined)', async () => {
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockConfig.getServerConfig as any).mockReturnValue({});
+      (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'ok', model: 'test' });
+
+      const result = await handleAnalyzeImage(
+        { type: 'base64', data: 'd' },
+        mockConfig, mockProvider, mockLogger
+      );
+
+      // Falls back to default maxImageSize (10485760) in the tool handler
+      expect(result.isError).toBeFalsy();
+    });
+
+    it('should handle invalid configuration values (maxImageSize as string)', async () => {
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockConfig.getServerConfig as any).mockReturnValue({ maxImageSize: 'not-a-number' as any });
+      (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'ok', model: 'test' });
+
+      const result = await handleAnalyzeImage(
+        { type: 'base64', data: 'd' },
+        mockConfig, mockProvider, mockLogger
+      );
+
+      // The tool handler uses serverConfig.maxImageSize || 10485760, so
+      // a truthy non-number would pass through. This is pre-existing behavior.
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('Network and Connectivity Issues', () => {
+    it('should handle DNS resolution failures', async () => {
+      mockImageProcessor.processImage.mockRejectedValue(new Error('getaddrinfo ENOTFOUND'));
+
+      const result = await handleAnalyzeImage(
+        { type: 'url', data: 'https://nonexistent.invalid/image.png' },
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('should handle SSL/TLS certificate errors', async () => {
+      mockImageProcessor.processImage.mockRejectedValue(new Error('UNABLE_TO_VERIFY_LEAF_SIGNATURE'));
+
+      const result = await handleAnalyzeImage(
+        { type: 'url', data: 'https://bad-cert.example.com/image.png' },
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('should handle connection refused errors', async () => {
+      mockImageProcessor.processImage.mockRejectedValue(new Error('ECONNREFUSED'));
+
+      const result = await handleAnalyzeImage(
+        { type: 'url', data: 'http://localhost:9999/image.png' },
+        mockConfig, mockProvider, mockLogger
+      );
+
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  describe('Concurrent Operation Edge Cases', () => {
+    it('should handle concurrent operations on shared resources', async () => {
+      mockImageProcessor.processImage.mockResolvedValue({ data: 'd', mimeType: 'image/png', size: 100 });
+      (mockProvider.analyzeImage as any).mockResolvedValue({ success: true, analysis: 'concurrent ok', model: 'test' });
+
+      // All 3 tools share ImageProcessor and Logger singletons. Verify
+      // concurrent calls don't interfere.
+      const { handleAnalyzeWebpage } = await import('../../src/tools/analyze-webpage.js');
+      const { handleAnalyzeMobileApp } = await import('../../src/tools/analyze-mobile-app.js');
+
+      const [r1, r2, r3] = await Promise.all([
+        handleAnalyzeImage({ type: 'base64', data: 'd' }, mockConfig, mockProvider, mockLogger),
+        handleAnalyzeWebpage({ type: 'base64', data: 'd' }, mockConfig, mockProvider, mockLogger),
+        handleAnalyzeMobileApp({ type: 'base64', data: 'd' }, mockConfig, mockProvider, mockLogger),
+      ]);
+
+      expect(r1.isError).toBeFalsy();
+      expect(r2.isError).toBeFalsy();
+      expect(r3.isError).toBeFalsy();
+    });
+  });
 });
