@@ -35,8 +35,9 @@ export interface OpenRouterConfig {
  * alongside the credentials and per-provider settings.
  *
  * `OpenRouterConfig` is preserved above as a structural supertype so that
- * existing references (tests, the legacy Config.getOpenRouterConfig accessor)
- * continue to type-check during the migration. Phase 3 will retire it.
+ * any external references continue to type-check. Phase 3 removed the
+ * runtime getOpenRouterConfig() accessor; the type alias is retained
+ * indefinitely (zero-cost, potential external-consumer compatibility).
  */
 export interface ProviderConfig {
   provider: ProviderId;

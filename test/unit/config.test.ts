@@ -270,12 +270,4 @@ describe('Config', () => {
       expect(sc.maxImageSize).toBe(20971520);
     });
   });
-
-  describe('getOpenRouterConfig (legacy accessor)', () => {
-    it('should delegate to getProviderConfig', () => {
-      process.env.PROVIDER = 'openai';
-      const config = Config.getInstance();
-      expect(config.getOpenRouterConfig()).toBe(config.getProviderConfig());
-    });
-  });
 });

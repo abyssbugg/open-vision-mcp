@@ -155,15 +155,6 @@ export class Config {
     return this.providerConfig;
   }
 
-  /**
-   * Legacy accessor preserved for backwards compatibility with tests and
-   * any external callers. Delegates to getProviderConfig(). Phase 3 will
-   * retire this along with the OpenRouterConfig type alias.
-   */
-  public getOpenRouterConfig(): ProviderConfig {
-    return this.getProviderConfig();
-  }
-
   public getServerConfig(): ServerConfig {
     return this.serverConfig;
   }

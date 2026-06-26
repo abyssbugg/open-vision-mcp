@@ -218,7 +218,7 @@ describe('End-to-End Image Analysis Workflow', () => {
     vi.doMock('../../src/config/index.js', () => ({
       Config: {
         getInstance: vi.fn(() => ({
-          getOpenRouterConfig: vi.fn(() => ({
+          getProviderConfig: vi.fn(() => ({
             apiKey: 'test-key',
             model: 'test-model',
           })),
@@ -311,7 +311,7 @@ describe('End-to-End Image Analysis Workflow', () => {
     vi.doMock('../../src/config/index.js', () => ({
       Config: {
         getInstance: vi.fn(() => ({
-          getOpenRouterConfig: vi.fn(() => ({
+          getProviderConfig: vi.fn(() => ({
             apiKey: 'test-key',
             model: 'test-model',
           })),
@@ -396,7 +396,7 @@ describe('End-to-End Image Analysis Workflow', () => {
     vi.doMock('../../src/config/index.js', () => ({
       Config: {
         getInstance: vi.fn(() => ({
-          getOpenRouterConfig: vi.fn(() => ({
+          getProviderConfig: vi.fn(() => ({
             apiKey: 'test-key',
             model: 'test-model',
           })),
@@ -485,7 +485,7 @@ describe('Error Handling and Edge Cases', () => {
     vi.doMock('../../src/config/index.js', () => ({
       Config: {
         getInstance: vi.fn(() => ({
-          getOpenRouterConfig: vi.fn(() => ({ apiKey: 'test-key', model: 'test-model' })),
+          getProviderConfig: vi.fn(() => ({ apiKey: 'test-key', model: 'test-model' })),
           getServerConfig: vi.fn(() => ({ maxImageSize: 10485760 })),
         })),
       },
@@ -542,7 +542,7 @@ describe('Error Handling and Edge Cases', () => {
     vi.doMock('../../src/config/index.js', () => ({
       Config: {
         getInstance: vi.fn(() => ({
-          getOpenRouterConfig: vi.fn(() => ({ apiKey: 'test-key', model: 'test-model' })),
+          getProviderConfig: vi.fn(() => ({ apiKey: 'test-key', model: 'test-model' })),
           getServerConfig: vi.fn(() => ({ maxImageSize: 1024 })), // Very small limit
         })),
       },
@@ -598,7 +598,7 @@ describe('Error Handling and Edge Cases', () => {
     vi.doMock('../../src/config/index.js', () => ({
       Config: {
         getInstance: vi.fn(() => ({
-          getOpenRouterConfig: vi.fn(() => ({ apiKey: 'test-key', model: 'test-model' })),
+          getProviderConfig: vi.fn(() => ({ apiKey: 'test-key', model: 'test-model' })),
           getServerConfig: vi.fn(() => ({ maxImageSize: 10485760 })),
         })),
       },
