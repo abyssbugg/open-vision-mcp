@@ -35,8 +35,8 @@ describe('MCP Server Integration Tests', () => {
       const { main } = await import('../../src/index.js');
 
       // Mock the external dependencies
-      vi.doMock('../../src/utils/openrouter-client.js', () => ({
-        OpenRouterClient: {
+      vi.doMock('../../src/providers/openai-compatible.js', () => ({
+        OpenAICompatibleProvider: {
           getInstance: vi.fn(() => ({
             testConnection: vi.fn().mockResolvedValue(true),
             validateModel: vi.fn().mockResolvedValue(true),
@@ -86,8 +86,8 @@ describe('MCP Server Integration Tests', () => {
       }));
 
       // Mock OpenRouter client
-      vi.doMock('../../src/utils/openrouter-client.js', () => ({
-        OpenRouterClient: {
+      vi.doMock('../../src/providers/openai-compatible.js', () => ({
+        OpenAICompatibleProvider: {
           getInstance: vi.fn(() => ({
             testConnection: vi.fn().mockResolvedValue(true),
             validateModel: vi.fn().mockResolvedValue(true),
@@ -229,8 +229,8 @@ describe('End-to-End Image Analysis Workflow', () => {
       },
     }));
 
-    vi.doMock('../../src/utils/openrouter-client.js', () => ({
-      OpenRouterClient: {
+    vi.doMock('../../src/providers/openai-compatible.js', () => ({
+      OpenAICompatibleProvider: {
         getInstance: vi.fn(() => ({
           analyzeImage: vi.fn().mockResolvedValue({
             success: true,
@@ -322,8 +322,8 @@ describe('End-to-End Image Analysis Workflow', () => {
       },
     }));
 
-    vi.doMock('../../src/utils/openrouter-client.js', () => ({
-      OpenRouterClient: {
+    vi.doMock('../../src/providers/openai-compatible.js', () => ({
+      OpenAICompatibleProvider: {
         getInstance: vi.fn(() => ({
           analyzeImage: vi.fn().mockResolvedValue({
             success: true,
@@ -407,8 +407,8 @@ describe('End-to-End Image Analysis Workflow', () => {
       },
     }));
 
-    vi.doMock('../../src/utils/openrouter-client.js', () => ({
-      OpenRouterClient: {
+    vi.doMock('../../src/providers/openai-compatible.js', () => ({
+      OpenAICompatibleProvider: {
         getInstance: vi.fn(() => ({
           analyzeImage: vi.fn().mockResolvedValue({
             success: true,
@@ -604,8 +604,8 @@ describe('Error Handling and Edge Cases', () => {
       },
     }));
 
-    vi.doMock('../../src/utils/openrouter-client.js', () => ({
-      OpenRouterClient: {
+    vi.doMock('../../src/providers/openai-compatible.js', () => ({
+      OpenAICompatibleProvider: {
         getInstance: vi.fn(() => ({
           analyzeImage: vi.fn().mockResolvedValue({
             success: false,
