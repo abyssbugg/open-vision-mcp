@@ -56,7 +56,7 @@ export class ImageProcessor {
       let buffer: Buffer;
       try {
         buffer = Buffer.from(base64Data, 'base64');
-      } catch (error) {
+      } catch {
         throw new Error('Invalid base64 encoding provided');
       }
 
