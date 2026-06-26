@@ -151,6 +151,33 @@ describe('Config', () => {
       );
     });
 
+    it('should use azure config when BASE_URL is provided', () => {
+      process.env.PROVIDER = 'azure';
+      process.env.BASE_URL = 'https://myresource.openai.azure.com/openai/deployments/my-dep?api-version=2024-02-15-preview';
+      delete process.env.MODEL;  // azure ignores MODEL (requiresExplicitModel: false)
+      const config = Config.getInstance();
+      const pc = config.getProviderConfig();
+      expect(pc.provider).toBe('azure');
+      expect(pc.baseUrl).toBe('https://myresource.openai.azure.com/openai/deployments/my-dep?api-version=2024-02-15-preview');
+    });
+
+    it('should throw when BASE_URL is missing for azure', () => {
+      process.env.PROVIDER = 'azure';
+      delete process.env.BASE_URL;
+      delete process.env.OPENROUTER_BASE_URL;
+      expect(() => Config.getInstance()).toThrow(
+        /BASE_URL is required for provider 'azure'/
+      );
+    });
+
+    it('should throw when BASE_URL is empty/whitespace for azure', () => {
+      process.env.PROVIDER = 'azure';
+      process.env.BASE_URL = '   ';
+      expect(() => Config.getInstance()).toThrow(
+        /BASE_URL is required for provider 'azure'/
+      );
+    });
+
     it('should throw when MODEL is required but unset (together)', () => {
       delete process.env.MODEL;
       delete process.env.OPENROUTER_MODEL;

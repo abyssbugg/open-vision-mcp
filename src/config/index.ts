@@ -94,12 +94,22 @@ export class Config {
       process.env.MODEL ??
       process.env.OPENROUTER_MODEL ??
       defaults.model ??
-      this.throwMissingModel(provider);
+      (defaults.requiresExplicitModel === false
+        ? ''  // provider doesn't require MODEL (e.g., azure ignores it)
+        : this.throwMissingModel(provider));
     const baseUrl =
       process.env.BASE_URL ??
       process.env.OPENROUTER_BASE_URL ??
       defaults.baseUrl;
     const extraHeaders = this.parseExtraHeaders() ?? defaults.extraHeaders;
+
+    // Azure requires a user-supplied BASE_URL (the full deployment URL
+    // including ?api-version=). The per-provider default is empty.
+    if (provider === 'azure' && (!baseUrl || baseUrl.trim() === '')) {
+      throw new Error(
+        "BASE_URL is required for provider 'azure' (Azure uses deployment-specific URLs including ?api-version=, not a per-provider default)."
+      );
+    }
 
     this.providerConfig = {
       provider,
