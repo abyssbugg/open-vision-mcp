@@ -228,5 +228,20 @@ describe('OpenAICompatibleProvider', () => {
         })],
       }));
     });
+
+    it('D6: should omit response_format when capabilities.jsonMode is false even if format=json', async () => {
+      // Construct a provider with jsonMode: false (not in PROVIDER_CAPABILITIES
+      // currently, but the gating is forward-compatible).
+      const noJsonCap: ProviderCapabilities = { jsonMode: false, modelsEndpoint: true, maxTokensField: 'max_tokens' };
+      provider = new OpenAICompatibleProvider(BASE_CONFIG, noJsonCap);
+      mockAxiosInstance.post.mockResolvedValue({
+        data: { choices: [{ message: { content: '{"result":"ok"}' } }] },
+      });
+
+      await provider.analyzeImage(mockImageData, mockMimeType, mockPrompt, { format: 'json' });
+
+      const callArgs = mockAxiosInstance.post.mock.calls[0][1] as any;
+      expect(callArgs.response_format).toBeUndefined();
+    });
   });
 });

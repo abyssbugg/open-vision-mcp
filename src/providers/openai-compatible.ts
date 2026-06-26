@@ -152,7 +152,15 @@ export class OpenAICompatibleProvider implements VisionProvider {
         ],
         max_tokens: Math.min(options.maxTokens || 4000, 8000), // Cap at 8000 tokens
         temperature: options.temperature || 0.1,
-        response_format: options.format === 'json' ? { type: 'json_object' } : undefined,
+        // D6 (Phase 2C): gate response_format on capabilities.jsonMode so
+        // providers that don't support json_object mode don't break.
+        // For all 6 current providers (jsonMode: true) this is a no-op.
+        // The tool handler's JSON-parsing fallback (openai-compatible.ts
+        // ~line 178) handles the case where the model returns JSON-like
+        // text without the response_format hint.
+        response_format: (options.format === 'json' && this.capabilities.jsonMode)
+          ? { type: 'json_object' }
+          : undefined,
       };
 
       this.logger.debug(`Sending request to ${this.config.provider} API`, {
