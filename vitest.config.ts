@@ -5,6 +5,14 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: ['./test/setup.ts'],
+    // Exclude the baseline/ reference clone (Phase 0) and standard dirs.
+    // baseline/ contains the upstream's stale test files which would
+    // otherwise be picked up by vitest's default globbing.
+    exclude: [
+      'node_modules/**',
+      'dist/**',
+      'baseline/**',
+    ],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [
