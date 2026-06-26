@@ -1,10 +1,10 @@
 {
-  "name": "openrouter-image-mcp",
-  "version": "1.0.13",
-  "description": "MCP server for image analysis using OpenRouter's vision models",
+  "name": "open-vision-mcp",
+  "version": "2.0.0",
+  "description": "Provider-neutral Vision MCP server — image analysis via OpenAI, OpenRouter, Together, DeepInfra, Fireworks, Groq, Chutes, Cerebras, and Azure OpenAI",
   "main": "dist/index.js",
   "bin": {
-    "openrouter-image-mcp": "dist/index.js"
+    "open-vision-mcp": "dist/index.js"
   },
   "type": "module",
   "scripts": {
@@ -18,7 +18,6 @@
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
     "test:edge-cases": "vitest run test/integration/edge-cases.test.ts",
-    "test:meta-guy": "vitest run test/integration/meta-guy-analysis.test.ts",
     "test:all": "./test/run-tests.sh",
     "test:verbose": "vitest --reporter=verbose",
     "test:json": "vitest --reporter=json > test-results.json",
@@ -35,26 +34,33 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "openrouter",
-    "image-analysis",
     "vision",
-    "ai",
-    "claude",
-    "gpt",
+    "image-analysis",
+    "multi-provider",
+    "openai-compatible",
+    "openrouter",
+    "openai",
+    "together",
+    "deepinfra",
+    "fireworks",
+    "groq",
+    "chutes",
+    "cerebras",
+    "azure",
     "screenshot-analysis",
     "webpage-analysis",
     "mobile-app-analysis"
   ],
-  "author": "OpenRouter Image MCP Contributors",
+  "author": "open-vision-mcp contributors (forked from JonathanJude/openrouter-image-mcp)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JonathanJude/openrouter-image-mcp.git"
+    "url": "https://github.com/abyssbugg/open-image-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/JonathanJude/openrouter-image-mcp/issues"
+    "url": "https://github.com/abyssbugg/open-image-mcp/issues"
   },
-  "homepage": "https://github.com/JonathanJude/openrouter-image-mcp#readme",
+  "homepage": "https://github.com/abyssbugg/open-image-mcp#readme",
   "files": [
     "dist/**/*",
     "README.md",
