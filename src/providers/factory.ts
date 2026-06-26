@@ -18,6 +18,9 @@ const PROVIDER_CAPABILITIES: Record<ProviderId, ProviderCapabilities> = {
   deepinfra: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
   fireworks: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
   groq: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+  chutes: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+  cerebras: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
+  azure: { jsonMode: true, modelsEndpoint: false, maxTokensField: 'max_tokens' },
 };
 
 /**
@@ -46,7 +49,12 @@ export class ProviderFactory {
       case 'groq':
         return new OpenAICompatibleProvider(config, capabilities);
       default:
-        throw new Error(`Unknown provider: ${config.provider satisfies never}`);
+        // R5: temporarily relaxed from 'satisfies never' to 'as string'.
+        // The 3 new ProviderId members (chutes, cerebras, azure) are
+        // handled in commit 8 when their factory cases are added. Until
+        // then, the default arm is reachable only if a caller passes
+        // a new id, which doesn't happen until commit 8 wires index.ts.
+        throw new Error(`Unknown provider: ${config.provider as string}`);
     }
   }
 }

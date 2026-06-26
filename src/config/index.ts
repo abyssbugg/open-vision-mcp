@@ -50,6 +50,18 @@ const PROVIDER_DEFAULTS: Record<
     baseUrl: 'https://api.groq.com/openai/v1',
     model: 'llama-3.2-90b-vision-preview',
   },
+  chutes: {
+    baseUrl: 'https://llm.chutes.ai/v1',
+    requiresExplicitModel: true,
+  },
+  cerebras: {
+    baseUrl: 'https://api.cerebras.ai/v1',
+    model: 'llama-4-scout-17b-16e-instruct', // optimistic; vision support unverified (Spike 2A-1)
+  },
+  azure: {
+    baseUrl: '', // required: user must set BASE_URL to the full deployment URL + ?api-version=
+    requiresExplicitModel: false, // R4: Azure ignores MODEL (deployment is in BASE_URL)
+  },
 };
 
 export class Config {

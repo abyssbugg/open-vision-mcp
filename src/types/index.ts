@@ -55,9 +55,10 @@ export interface ServerConfig {
 }
 
 /**
- * Identifier of an inference provider. Phase 2B widens this to the six
- * fully-compatible OpenAI-compatible providers. Phase 2C will add 'chutes',
- * 'cerebras', and 'azure' without changing the factory signature.
+ * Identifier of an inference provider. Phase 2B covered the six
+ * fully-compatible OpenAI-compatible providers. Phase 2C adds Chutes,
+ * Cerebras, and Azure. Phase 2C also adds 'azure' — a dedicated adapter
+ * due to its different auth scheme.
  */
 export type ProviderId =
   | 'openrouter'
@@ -65,7 +66,10 @@ export type ProviderId =
   | 'together'
   | 'deepinfra'
   | 'fireworks'
-  | 'groq';
+  | 'groq'
+  | 'chutes'
+  | 'cerebras'
+  | 'azure';
 
 /**
  * Static capability descriptor for a VisionProvider. Enables synchronous,
