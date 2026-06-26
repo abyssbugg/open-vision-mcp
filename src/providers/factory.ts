@@ -47,13 +47,12 @@ export class ProviderFactory {
       case 'deepinfra':
       case 'fireworks':
       case 'groq':
+      case 'cerebras':
         return new OpenAICompatibleProvider(config, capabilities);
       default:
         // R5: temporarily relaxed from 'satisfies never' to 'as string'.
-        // The 3 new ProviderId members (chutes, cerebras, azure) are
-        // handled in commit 8 when their factory cases are added. Until
-        // then, the default arm is reachable only if a caller passes
-        // a new id, which doesn't happen until commit 8 wires index.ts.
+        // The remaining 2 new members (chutes, azure) are handled in
+        // commit 8 when their factory cases are added.
         throw new Error(`Unknown provider: ${config.provider as string}`);
     }
   }

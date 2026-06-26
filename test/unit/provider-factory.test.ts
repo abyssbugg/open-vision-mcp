@@ -64,8 +64,19 @@ describe('ProviderFactory', () => {
       expect(provider).toBeDefined();
     });
 
+    it('should return a provider for cerebras (config-only, OpenAICompatibleProvider)', () => {
+      const config = makeConfig('cerebras');
+      const provider = ProviderFactory.create(config);
+      expect(provider).toBeDefined();
+      expect(provider.capabilities).toEqual({
+        jsonMode: true,
+        modelsEndpoint: true,
+        maxTokensField: 'max_tokens',
+      });
+    });
+
     it('should pass the correct capabilities for each provider', () => {
-      for (const p of ['openrouter', 'openai', 'together', 'deepinfra', 'fireworks', 'groq'] as ProviderId[]) {
+      for (const p of ['openrouter', 'openai', 'together', 'deepinfra', 'fireworks', 'groq', 'cerebras'] as ProviderId[]) {
         const config = makeConfig(p);
         const provider = ProviderFactory.create(config);
         expect(provider.capabilities).toEqual({

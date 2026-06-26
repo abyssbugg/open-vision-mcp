@@ -122,6 +122,35 @@ describe('Config', () => {
       expect(pc.baseUrl).toBe('https://api.groq.com/openai/v1');
     });
 
+    it('should use cerebras defaults (optimistic model, unverified vision)', () => {
+      delete process.env.MODEL;
+      delete process.env.BASE_URL;
+      process.env.PROVIDER = 'cerebras';
+      const config = Config.getInstance();
+      const pc = config.getProviderConfig();
+      expect(pc.model).toBe('llama-4-scout-17b-16e-instruct');
+      expect(pc.baseUrl).toBe('https://api.cerebras.ai/v1');
+    });
+
+    it('should use chutes defaults (baseUrl, MODEL required)', () => {
+      process.env.PROVIDER = 'chutes';
+      process.env.MODEL = 'deepseek-ai/DeepSeek-V3-0324';
+      delete process.env.BASE_URL;
+      const config = Config.getInstance();
+      const pc = config.getProviderConfig();
+      expect(pc.baseUrl).toBe('https://llm.chutes.ai/v1');
+      expect(pc.model).toBe('deepseek-ai/DeepSeek-V3-0324');
+    });
+
+    it('should throw when MODEL is required but unset (chutes)', () => {
+      delete process.env.MODEL;
+      delete process.env.OPENROUTER_MODEL;
+      process.env.PROVIDER = 'chutes';
+      expect(() => Config.getInstance()).toThrow(
+        /MODEL environment variable is required for provider 'chutes'/
+      );
+    });
+
     it('should throw when MODEL is required but unset (together)', () => {
       delete process.env.MODEL;
       delete process.env.OPENROUTER_MODEL;
