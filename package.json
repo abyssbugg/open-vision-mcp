@@ -1,6 +1,6 @@
 {
   "name": "open-vision-mcp",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Provider-neutral Vision MCP server — image analysis via OpenAI, OpenRouter, Together, DeepInfra, Fireworks, Groq, Chutes, Cerebras, and Azure OpenAI",
   "main": "dist/index.js",
   "bin": {

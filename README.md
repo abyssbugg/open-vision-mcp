@@ -1,6 +1,6 @@
 # open-vision-mcp
 
-**Provider-neutral Vision MCP Server** — image analysis via 9 inference providers through a single MCP server.
+**Provider-neutral Vision MCP Server** — image analysis via 10 inference providers through a single MCP server.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -31,6 +31,7 @@ Perfect for screenshots, photos, diagrams, webpage analysis, and mobile app UI r
 | Chutes | `chutes` | `https://llm.chutes.ai/v1` | (check Chutes' `/models` for `supported_features`) | **Yes** | Per-model capability preflight |
 | Cerebras | `cerebras` | `https://api.cerebras.ai/v1` | `llama-4-scout-17b-16e-instruct` | No | ⚠️ Vision support **unverified** |
 | Azure OpenAI | `azure` | (user-supplied deployment URL) | (deployment-configured) | No (ignored) | Requires `BASE_URL` with `?api-version=`; uses `api-key` header |
+| Ollama | `ollama` | `http://localhost:11434` | `llama3.2-vision` | No | Local (default) or Cloud (`BASE_URL=https://api.ollama.com`); uses native `/api/chat` endpoint |
 
 ---
 
@@ -306,6 +307,9 @@ Azure requires `BASE_URL` to be the full deployment URL including `?api-version=
 
 ### "<provider> API Error: ..."
 The error message includes the provider id (e.g., `openai API Error: Invalid API key`). This confirms the provider-aware error handling is working. Check your API key and model id.
+
+### Ollama: connection refused (local)
+Ensure Ollama is running locally (`ollama serve` or `ollama pull <model>`). The default `BASE_URL` is `http://localhost:11434`. For Ollama Cloud, set `BASE_URL=https://api.ollama.com` and `API_KEY=<cloud-token>`.
 
 ---
 
