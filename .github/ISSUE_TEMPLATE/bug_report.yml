@@ -1,0 +1,45 @@
+name: Bug Report
+description: Report a bug in open-vision-mcp
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      description: Which provider are you using?
+      options:
+        - openrouter
+        - openai
+        - together
+        - deepinfra
+        - fireworks
+        - groq
+        - chutes
+        - cerebras
+        - azure
+        - ollama
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: PROVIDER, MODEL, Node version, OS
+      placeholder: "PROVIDER=openai, MODEL=gpt-4o, Node v25.9.0, macOS"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log output (with LOG_LEVEL=debug). Do NOT include API keys.
+      render: shell
+    validations:
+      required: false
