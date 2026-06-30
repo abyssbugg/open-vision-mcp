@@ -61,7 +61,8 @@ export type ProviderId =
   | 'groq'
   | 'chutes'
   | 'cerebras'
-  | 'azure';
+  | 'azure'
+  | 'ollama';
 
 /**
  * Static capability descriptor for a VisionProvider. Enables synchronous,

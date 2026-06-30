@@ -62,6 +62,11 @@ const PROVIDER_DEFAULTS: Record<
     baseUrl: '', // required: user must set BASE_URL to the full deployment URL + ?api-version=
     requiresExplicitModel: false, // R4: Azure ignores MODEL (deployment is in BASE_URL)
   },
+  ollama: {
+    baseUrl: 'http://localhost:11434', // local default; Cloud users override with https://api.ollama.com
+    model: 'llama3.2-vision', // vision-capable default
+    requiresExplicitModel: false,
+  },
 };
 
 export class Config {

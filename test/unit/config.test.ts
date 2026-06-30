@@ -132,6 +132,27 @@ describe('Config', () => {
       expect(pc.baseUrl).toBe('https://api.cerebras.ai/v1');
     });
 
+    it('should use ollama defaults (local baseUrl + vision model)', () => {
+      delete process.env.MODEL;
+      delete process.env.BASE_URL;
+      process.env.PROVIDER = 'ollama';
+      const config = Config.getInstance();
+      const pc = config.getProviderConfig();
+      expect(pc.provider).toBe('ollama');
+      expect(pc.baseUrl).toBe('http://localhost:11434');
+      expect(pc.model).toBe('llama3.2-vision');
+    });
+
+    it('should use ollama with custom BASE_URL (Cloud)', () => {
+      process.env.PROVIDER = 'ollama';
+      process.env.MODEL = 'gemma3:12b';
+      process.env.BASE_URL = 'https://api.ollama.com';
+      const config = Config.getInstance();
+      const pc = config.getProviderConfig();
+      expect(pc.baseUrl).toBe('https://api.ollama.com');
+      expect(pc.model).toBe('gemma3:12b');
+    });
+
     it('should use chutes defaults (baseUrl, MODEL required)', () => {
       process.env.PROVIDER = 'chutes';
       process.env.MODEL = 'deepseek-ai/DeepSeek-V3-0324';

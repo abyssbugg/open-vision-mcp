@@ -97,6 +97,17 @@ describe('ProviderFactory', () => {
       });
     });
 
+    it('should return an OllamaProvider for ollama', () => {
+      const config = makeConfig('ollama');
+      const provider = ProviderFactory.create(config);
+      expect(provider).toBeDefined();
+      expect(provider.capabilities).toEqual({
+        jsonMode: true,
+        modelsEndpoint: true,
+        maxTokensField: 'max_tokens',
+      });
+    });
+
     it('should pass the correct capabilities for each provider', () => {
       const expectedCaps: Record<string, any> = {
         openrouter: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
@@ -108,9 +119,13 @@ describe('ProviderFactory', () => {
         chutes: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
         cerebras: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
         azure: { jsonMode: true, modelsEndpoint: false, maxTokensField: 'max_tokens' },
+        ollama: { jsonMode: true, modelsEndpoint: true, maxTokensField: 'max_tokens' },
       };
       for (const p of Object.keys(expectedCaps) as ProviderId[]) {
-        const config = makeConfig(p, p === 'azure' ? { baseUrl: 'https://x.openai.azure.com/openai/deployments/d' } : p === 'chutes' ? { model: 'm' } : {});
+        const overrides: any = {};
+        if (p === 'azure') overrides.baseUrl = 'https://x.openai.azure.com/openai/deployments/d';
+        if (p === 'chutes') overrides.model = 'm';
+        const config = makeConfig(p, overrides);
         const provider = ProviderFactory.create(config);
         expect(provider.capabilities).toEqual(expectedCaps[p]);
       }
