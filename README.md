@@ -64,8 +64,8 @@ open-vision-mcp
 ### Option 3: Clone and build
 
 ```bash
-git clone https://github.com/abyssbugg/open-image-mcp.git
-cd open-image-mcp
+git clone https://github.com/abyssbugg/open-vision-mcp.git
+cd open-vision-mcp
 npm install
 npm run build
 node dist/index.js
@@ -315,7 +315,7 @@ Ensure Ollama is running locally (`ollama serve` or `ollama pull <model>`). The 
 
 ## Attribution
 
-This project is a fork of [JonathanJude/openrouter-image-mcp](https://github.com/JonathanJude/openrouter-image-mcp) (MIT license), refactored to be provider-neutral with support for 9 inference providers.
+This project is a fork of [JonathanJude/openrouter-image-mcp](https://github.com/JonathanJude/openrouter-image-mcp) (MIT license), refactored to be provider-neutral with support for 10 inference providers.
 
 ---
 

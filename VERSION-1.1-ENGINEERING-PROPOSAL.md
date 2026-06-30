@@ -148,7 +148,7 @@ Ollama Cloud runs at `https://api.ollama.com`. The native `/api/chat` endpoint a
 ```bash
 # Ollama Cloud
 PROVIDER=ollama
-API_KEY=691babd3...      # the Cloud token
+API_KEY=<cloud-token>      # the Cloud token
 MODEL=gemma3:12b         # vision-capable model from the /v1/models list
 BASE_URL=https://api.ollama.com
 ```
@@ -400,7 +400,7 @@ MODEL=llama3.2-vision
 
 # Cloud
 PROVIDER=ollama
-API_KEY=691babd3...      # the Cloud token
+API_KEY=<cloud-token>      # the Cloud token
 MODEL=gemma3:12b
 BASE_URL=https://api.ollama.com
 ```
@@ -456,7 +456,7 @@ Version 1: 163 tests → Version 1.1: ~179 tests (+16: 12 ollama-provider + 2 fa
 
 ### 13.1 Available credentials
 
-`OLLAMA_API_KEY` (57 chars, format `691babd3...`) — valid for Ollama Cloud:
+`OLLAMA_API_KEY` (57 chars, Cloud token format) — valid for Ollama Cloud:
 - `/v1/models` → 200 (model discovery)
 - `/api/chat` (text) → 200 (text completion)
 - `/api/chat` (vision with `images` field) → 200 (**vision analysis confirmed** in the feasibility assessment)
