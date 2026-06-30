@@ -215,7 +215,7 @@ All 16 tests pass. The mocks match the empirically-confirmed request/response sh
 ### 11.1 Secrets
 
 - ✅ No full API key in any tracked file (verified: `grep` for the full 57-char key → zero hits)
-- ⚠️ Key prefix `691babd3...` (first 8 chars, truncated with `...`) appears in `VERSION-1.1-ENGINEERING-PROPOSAL.md` — minor information leak (8 of 57 chars), not the full key
+- ⚠️ Key prefix `<redacted-key-prefix>` (first 8 chars, truncated with `...`) appears in `VERSION-1.1-ENGINEERING-PROPOSAL.md` — minor information leak (8 of 57 chars), not the full key
 - ✅ API keys loaded from env vars only; never logged (verified in V1 Phase 2B.5 G10)
 - ✅ `.env` in `.gitignore`
 
@@ -254,7 +254,7 @@ All 16 tests pass. The mocks match the empirically-confirmed request/response sh
 ### V1.1-specific observations
 | Finding | Severity | Notes |
 |---|---|---|
-| Key prefix in proposal doc | Low | `691babd3...` (8 chars, truncated) in `VERSION-1.1-ENGINEERING-PROPOSAL.md`; not the full key; the proposal is not shipped in the npm package |
+| Key prefix in proposal doc | Low | `<redacted-key-prefix>` (8 chars, truncated) in `VERSION-1.1-ENGINEERING-PROPOSAL.md`; not the full key; the proposal is not shipped in the npm package |
 | 9 providers remain live-unvalidated | Medium | Documented in README; Stage 2 is opportunistic |
 | Cerebras vision unverified | Low | Documented in README |
 | Package name is still a placeholder | Medium | Deferred from V1; `open-vision-mcp` is the temporary name |
@@ -271,7 +271,7 @@ All 16 tests pass. The mocks match the empirically-confirmed request/response sh
 | # | Finding | Severity | Classification |
 |---|---|---|---|
 | F1 | Package name is a placeholder (`open-vision-mcp`) | Medium | Must resolve before `npm publish` (same as V1) |
-| F2 | Key prefix `691babd3...` in proposal doc | Low | Not the full key; doc not shipped in npm package; minor information leak |
+| F2 | Key prefix `<redacted-key-prefix>` in proposal doc | Low | Not the full key; doc not shipped in npm package; minor information leak |
 | F3 | 9 providers remain live-unvalidated | Medium | Documented in README; Stage 2 opportunistic |
 | F4 | Cerebras vision unverified | Low | Documented in README |
 | F5 | `npm test` exit code 1 (vitest noise) | Low | Pre-existing; documented |
@@ -326,7 +326,7 @@ All 16 tests pass. The mocks match the empirically-confirmed request/response sh
 **Required changes before `npm publish`:**
 
 1. **F1 (Medium) — Final package naming decision.** Same as V1. Replace `open-vision-mcp` placeholder with the agreed name. One-line `package.json` change + README title + repository URLs.
-2. **F2 (Low) — Remove key prefix from proposal doc.** Replace `691babd3...` with `<cloud-token>` in `VERSION-1.1-ENGINEERING-PROPOSAL.md`. The proposal is not shipped in the npm package but is in the git repo; cleaning it prevents the 8-char prefix from being public.
+2. **F2 (Low) — Remove key prefix from proposal doc.** Replace `<redacted-key-prefix>` with `<cloud-token>` in `VERSION-1.1-ENGINEERING-PROPOSAL.md`. The proposal is not shipped in the npm package but is in the git repo; cleaning it prevents the 8-char prefix from being public.
 
 **Recommended but not blocking:**
 

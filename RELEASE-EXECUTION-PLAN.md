@@ -44,11 +44,11 @@ The package name is confirmed as `open-vision-mcp`. It's currently the placehold
 
 ### R1.2 Remove key prefix from proposal doc
 
-**Finding F2 from the V1.1 release review:** `VERSION-1.1-ENGINEERING-PROPOSAL.md` contains `691babd3...` (first 8 chars of the Ollama API key). Replace with `<cloud-token>`.
+**Finding F2 from the V1.1 release review:** `VERSION-1.1-ENGINEERING-PROPOSAL.md` contains `<redacted-key-prefix>` (first 8 chars of the Ollama API key). Replace with `<cloud-token>`.
 
 | File | Current | Final |
 |---|---|---|
-| `VERSION-1.1-ENGINEERING-PROPOSAL.md` | `API_KEY=691babd3...` (2 occurrences) | `API_KEY=<cloud-token>` |
+| `VERSION-1.1-ENGINEERING-PROPOSAL.md` | `API_KEY=<redacted-key-prefix>` (2 occurrences) | `API_KEY=<cloud-token>` |
 
 **Action:** one commit (or squash into R1.1).
 
@@ -499,7 +499,7 @@ diff <(sed -n "/const tools: Tool\[\]/,/return { tools };/p" baseline/src/index.
 # Expected: identical
 
 # No secrets
-git ls-files | xargs grep -l "sk-or-v1-[a-zA-Z0-9]\{20,\}\|691babd32ee54fb\|ghp_[a-zA-Z0-9]\{30,\}" 2>/dev/null
+git ls-files | xargs grep -l "sk-or-v1-[a-zA-Z0-9]\{20,\}\|<redacted-key-prefix>\|ghp_[a-zA-Z0-9]\{30,\}" 2>/dev/null
 # Expected: no hits
 
 # npm package contents
@@ -850,7 +850,7 @@ R6.2+ Ongoing maintenance
 Before executing `npm publish`:
 
 - [ ] Final name `open-vision-mcp` applied to `package.json` (name, bin, repository, bugs, homepage)
-- [ ] Key prefix `691babd3...` removed from all docs
+- [ ] Key prefix `<redacted-key-prefix>` removed from all docs
 - [ ] README has no "placeholder" language; all URLs point to `abyssbugg/open-vision-mcp`
 - [ ] CHANGELOG.md created with v2.1.0 entry
 - [ ] LICENSE verified (MIT, correct year/name)

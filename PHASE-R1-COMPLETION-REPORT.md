@@ -24,7 +24,7 @@
 
 | File | Change | Evidence |
 |---|---|---|
-| `VERSION-1.1-ENGINEERING-PROPOSAL.md` | Replaced `691babd3...` (3 occurrences) with `<cloud-token>` / `Cloud token format` | `grep -rn "691babd3" .` → zero hits |
+| `VERSION-1.1-ENGINEERING-PROPOSAL.md` | Replaced `<redacted-key-prefix>` (3 occurrences) with `<cloud-token>` / `Cloud token format` | `grep -rn "<redacted-key-prefix>" .` → zero hits |
 
 **All key prefixes removed from every tracked file.** No full key was ever committed (verified: `grep` for the 57-char key → zero hits).
 
